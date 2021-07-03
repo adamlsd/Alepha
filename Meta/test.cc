@@ -2,6 +2,8 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 
 #include <Alepha/Meta/is_sequence.h>
 
+#include <Alepha/Meta/is_streamable.h>
+
 #include <Alepha/Testing/test.h>
 
 #include <Alepha/Utility/evaluation.h>
@@ -105,6 +107,12 @@ namespace
 			static_assert( not Alepha::Meta::is_string_v< std::list< std::string > > );
 			static_assert( not Alepha::Meta::is_string_v< std::forward_list< std::string > > );
 			static_assert( not Alepha::Meta::is_string_v< std::deque< std::string > > );
+		};
+
+		"meta.streams"_test <=[]
+		{
+			static_assert( Alepha::Meta::is_streamable_v< int > );
+			static_assert( not Alepha::Meta::is_streamable_v< void > );
 		};
 	};
 }
