@@ -13,6 +13,8 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 #include <functional>
 #include <memory>
 
+#include <Alepha/console.h>
+
 namespace Alepha::Hydrogen::Testing
 {
 	inline namespace exports { inline namespace testing {} }
@@ -22,14 +24,6 @@ namespace Alepha::Hydrogen::Testing
 		inline namespace exports {}
 
 		using namespace std::literals::string_literals;
-
-		namespace C
-		{
-			const std::string csi= "\e[";
-			const std::string green= C::csi + "32m";
-			const std::string red= C::csi + "31m";
-			const std::string normal= C::csi + "0m";
-		}
 
 		struct TestName
 		{

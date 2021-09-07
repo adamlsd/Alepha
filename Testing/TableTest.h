@@ -6,9 +6,12 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 
 #include <tuple>
 #include <string>
+#include <iostream>
+#include <algorithm>
 
 #include <Alepha/Meta/is_vector.h>
 #include <Alepha/Utility/evaluation.h>
+#include <Alepha/console.h>
 
 namespace Alepha::Hydrogen::Testing
 {
@@ -46,10 +49,10 @@ namespace Alepha::Hydrogen::Testing
 					{
 						if( std::apply( function, params ) != expected )
 						{
-							std::cout << "  FAILURE: " << comment << std::endl;
+							std::cout << C::red << "  FAILURE" << C::normal << ": " << comment << std::endl;
 							++failureCount;
 						}
-						else std::cout << "  SUCCESS: " << comment << std::endl;
+						else std::cout << C::green << "  SUCCESS" << C::normal << ": " << comment << std::endl;
 					}
 
 					return failureCount;
