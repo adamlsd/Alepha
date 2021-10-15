@@ -19,7 +19,7 @@ namespace Alepha::Hydrogen::Meta
 			template< typename T > struct tuple_decay;
 
 			template< typename ... Args >
-			struct tuple_decay< std::tuple< T, Args... > >
+			struct tuple_decay< std::tuple< Args... > >
 			{
 				using type= std::tuple< Stud::decay_t< Args >... >;
 			};
@@ -31,6 +31,6 @@ namespace Alepha::Hydrogen::Meta
 
 	namespace exports::type_traits
 	{
-		using namespace detail::type_traits::tuple_decay;
+		using namespace detail::type_traits::tuple_decay::exports;
 	}
 }
