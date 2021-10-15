@@ -15,11 +15,13 @@ namespace Alepha::Hydrogen::Utility
 	{
 		struct evaluate_t {};
 		struct enroll_t {};
+		struct lambaste_t {};
 
 		inline namespace exports
 		{
 			inline constexpr evaluate_t evaluate;
 			inline constexpr enroll_t enroll;
+			inline constexpr lambaste_t lambaste;
 		}
 
 		template< typename Function >
@@ -38,6 +40,13 @@ namespace Alepha::Hydrogen::Utility
 			(void) ( evaluate <=init );
 
 			return registration;
+		}
+
+		template< typename Value >
+		auto
+		operator <=( lambaste_t, Value value )
+		{
+			return [value]{ return value; };
 		}
 	}
 
