@@ -92,6 +92,41 @@ namespace Alepha::Hydrogen::Testing
 			return name <= wrapper;
 		}
 
+		namespace exports
+		{
+			struct TestStateCore
+			{
+				public:
+					std::vector< std::string > failures;
+
+				public:
+					void
+					expect( const bool state, const std::string test= "" )
+					{
+						if( not state ) failures.push_back( test );
+					}
+
+					void
+					demand( const bool state, const std::string test= "" )
+					{
+						if( not state ) throw TestFailureException( failures.size() + 1 );
+					}
+			};
+
+			using TestState= TestStateCore &;
+		}
+
+		inline auto
+		operator <= ( TestName name, std::function< void ( TestState ) > test )
+		{
+			auto wrapper= [test]
+			{
+				TestStateCore state;
+				test( state );
+				return state.failures.size();
+			}
+		};
+
 		template< typename TestFunc >
 		inline auto
 		operator <= ( TestName name, TestFunc test )
