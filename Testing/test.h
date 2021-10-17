@@ -23,6 +23,15 @@ namespace Alepha::Hydrogen::Testing
 	{
 		inline namespace exports {}
 
+		namespace C
+		{
+			const bool debug= false;
+			const bool debugTestRegistration= false or C::debug;
+			const bool debugTestRun= false or C::debug;
+
+			using namespace Alepha::exports::C;
+		}
+
 		using namespace std::literals::string_literals;
 
 		struct TestName
@@ -67,6 +76,7 @@ namespace Alepha::Hydrogen::Testing
 		operator <= ( TestName name, std::function< void () > test )
 		{
 			struct TestRegistration {} rv;
+			if( C::debugTestRegistration ) std::cerr << "Attempting to register: " << name.name << std::endl;
 
 			registry().emplace_back( name.name, name.disabled, test );
 			assert( not registry().empty() );
@@ -78,10 +88,13 @@ namespace Alepha::Hydrogen::Testing
 		struct exports::TestFailureException
 		{
 			int failureCount= -1;
+
+			explicit TestFailureException( const int failureCount ) : failureCount( failureCount ) {}
 		};
 
+		template< typename Integer, typename= std::enable_if_t< std::is_integral_v< Integer > > >
 		inline auto
-		operator <= ( TestName name, std::function< int () > test )
+		operator <= ( TestName name, std::function< Integer () > test )
 		{
 			auto wrapper= [test]
 			{
@@ -124,7 +137,8 @@ namespace Alepha::Hydrogen::Testing
 				TestStateCore state;
 				test( state );
 				return state.failures.size();
-			}
+			};
+			return name <= std::function{ wrapper };
 		};
 
 		template< typename TestFunc >
@@ -139,6 +153,10 @@ namespace Alepha::Hydrogen::Testing
 			[[nodiscard]] inline int
 			runAllTests( const std::vector< std::string > selections= {} )
 			{
+				if( C::debugTestRun )
+				{
+					std::cerr << "Going to run all tests.  (I see " << registry().size() << " tests.)" << std::endl;
+				}
 				bool failed= false;
 				const auto selected= [ selections ]( const std::string test )
 				{
@@ -157,6 +175,8 @@ namespace Alepha::Hydrogen::Testing
 				for( const auto &[ name, disabled, test ]: registry() )
 				try
 				{
+					if( C::debugTestRun ) std::cerr << "Trying test " << name << std::endl;
+
 					if( explicitlyNamed( name ) or not disabled and selected( name ) )
 					{
 						test();
