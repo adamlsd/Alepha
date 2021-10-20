@@ -10,6 +10,7 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 #include <algorithm>
 
 #include <Alepha/Meta/is_vector.h>
+#include <Alepha/Meta/product_type_decay.h>
 #include <Alepha/Utility/evaluation.h>
 #include <Alepha/console.h>
 
@@ -29,7 +30,7 @@ namespace Alepha::Hydrogen::Testing
 		template< typename RetVal, typename ... Args, RetVal (*function)( Args... ) >
 		struct exports::TableTest< function >
 		{
-			using args_type= std::tuple< Args... >;
+			using args_type= Meta::product_type_decay_t< std::tuple< Args... > >;
 
 			struct Cases
 			{
