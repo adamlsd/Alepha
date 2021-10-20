@@ -14,7 +14,6 @@ namespace Alepha::Hydrogen::Stud
 	{
 		inline namespace exports
 		{
-			inline namespace
 			template< typename T >
 			struct type_identity
 			{
