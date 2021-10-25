@@ -14,6 +14,7 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 #include <memory>
 
 #include <Alepha/console.h>
+#include <Alepha/types.h>
 
 namespace Alepha::Hydrogen::Testing
 {
@@ -200,7 +201,7 @@ namespace Alepha::Hydrogen::Testing
 			}
 
 			[[nodiscard]] inline int
-			runAllTests( const unsigned argcnt, const char *const *const argvec )
+			runAllTests( const argcnt_t argcnt, const argvec_t argvec )
 			{
 				return runAllTests( { argvec + 1, argvec + argcnt } );
 			}

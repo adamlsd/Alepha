@@ -8,6 +8,9 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <typeinfo>
+
+#include <boost/core/demangle.hpp>
 
 #include <Alepha/Meta/is_vector.h>
 #include <Alepha/Meta/product_type_decay.h>
@@ -23,6 +26,15 @@ namespace Alepha::Hydrogen::Testing
 		inline namespace exports
 		{
 			template< auto > struct TableTest;
+		}
+
+		inline void breakpoint() {}
+
+		namespace C
+		{
+			const bool debug= false;
+			const bool debugCaseTypes= false or C::debug;
+			using namespace Alepha::exports::console::C;
 		}
 
 		using namespace Utility::exports::evaluation;
@@ -48,6 +60,8 @@ namespace Alepha::Hydrogen::Testing
 					int failureCount= 0;
 					for( const auto &[ comment, params, expected ]: tests )
 					{
+						if( C::debugCaseTypes ) std::cerr << boost::core::demangle( typeid( params ).name() ) << std::endl;
+						breakpoint();
 						if( std::apply( function, params ) != expected )
 						{
 							std::cout << C::red << "  FAILURE" << C::normal << ": " << comment << std::endl;
@@ -60,9 +74,10 @@ namespace Alepha::Hydrogen::Testing
 				}
 			};
 
-			struct VectorCases;
+			//struct VectorCases;
 		};
 
+#ifdef DISABLED
 		template< typename RetVal, typename ... Args, RetVal (*function)( Args... ) >
 		struct TableTest< function >::VectorCases
 		{
@@ -112,6 +127,7 @@ namespace Alepha::Hydrogen::Testing
 				return failureCount;
 			}
 		};
+#endif
 	}
 
 	namespace exports::table_test
