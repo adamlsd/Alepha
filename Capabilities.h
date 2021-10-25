@@ -65,17 +65,17 @@ namespace Alepha::Hydrogen
 		constexpr auto
 		has_cap( const Stud::type_identity< Capabilities< Caps... > > & )
 		{
-			return Meta::find_if< Meta::bind1st< std::is_base_of, cap >, Meta::list< Caps... > >{};
+			return Meta::find_if< Meta::bind1st< std::is_base_of, cap >, Meta::Container::vector< Caps... > >{};
 		}
 
 		template< typename cap >
-		constexpr std::false_type has_cap( const Meta::list<> & ) { return {}; }
+		constexpr std::false_type has_cap( const Meta::Container::vector<> & ) { return {}; }
 
 		template< typename cap, typename First, typename ... TParams >
 		constexpr auto
-		has_cap( const Meta::list< First, TParams... > & )
+		has_cap( const Meta::Container::vector< First, TParams... > & )
 		{
-			using depth_type= decltype( has_cap< cap >( Meta::list< TParams... >{} ) );
+			using depth_type= decltype( has_cap< cap >( Meta::Container::vector< TParams... >{} ) );
 			if constexpr( is_capability_list_v< First > )
 			{
 				using bool_type= decltype( has_cap< cap >( Stud::type_identity< First >() ) );
@@ -92,7 +92,7 @@ namespace Alepha::Hydrogen
 		constexpr auto
 		has_cap( const Class< TParams... > & )
 		{
-			return has_cap< cap >( Meta::list< TParams... >{} );
+			return has_cap< cap >( Meta::Container::vector< TParams... >{} );
 		}
 
 		namespace exports

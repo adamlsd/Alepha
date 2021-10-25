@@ -6,7 +6,7 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 
 #include <tuple>
 
-#include <Alepha/Meta/list.h>
+#include <Alepha/Meta/Container/vector.h>
 #include <Alepha/Meta/functional.h>
 
 namespace Alepha::Hydrogen::Meta
@@ -21,11 +21,16 @@ namespace Alepha::Hydrogen::Meta
 			struct find_if;
 
 			template< typename Predicate, typename First, typename ... Elements >
-			struct find_if< Predicate, list< First, Elements... > >
-				: std::conditional_t< Meta::call< Predicate, First >::value, std::true_type, find_if< Predicate, list< Elements... > > >::type {};
+			struct find_if< Predicate, Container::vector< First, Elements... > >
+				: std::conditional_t
+				<
+					Meta::call< Predicate, First >::value,
+					std::true_type,
+					find_if< Predicate, Container::vector< Elements... > >
+				>::type {};
 
 			template< typename Predicate >
-			struct find_if< Predicate, list<> > : std::false_type {};
+			struct find_if< Predicate, Container::vector<> > : std::false_type {};
 
 			template< typename Predicate, typename List >
 			constexpr bool find_if_v= find_if< Predicate, List >::value;

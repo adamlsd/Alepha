@@ -27,7 +27,7 @@ namespace Alepha::Hydrogen::Meta
 			{
 				using type= bind2nd;
 				template< typename Arg >
-				struct call : Function< Arg, second >::type {};
+				struct call : Function< Arg, Second >::type {};
 			};
 
 			template< typename Function, typename ... Args >

@@ -8,8 +8,8 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 
 namespace
 {
-	using Alepha::Testing::argcnt_t;
-	using Alepha::Testing::argvec_t;
+	using Alepha::exports::types::argcnt_t;
+	using Alepha::exports::types::argvec_t;
 }
 
 int
