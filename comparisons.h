@@ -33,10 +33,12 @@ namespace Alepha::Hydrogen
 		}
 
 		template< typename T >
-		constexpr bool has_comparable_capability_v= has_capability_v< std::decay_t< T >, comparable >;
+		constexpr bool has_comparable_capability_v= has_capability( Meta::type_value< std::decay_t< T > >{}, comparable_capability );
 
 		template< typename T >
-		struct has_comparable_capability : std::bool_constant< has_comparable_capability_v< T > > {};
+		struct has_comparable_capability_s : std::bool_constant< has_comparable_capability_v< T > > {};
+
+		inline constexpr Meta::trait< has_comparable_capability_s > has_comparable_capability;
 
 
 		// Spaceship lens support
@@ -53,7 +55,7 @@ namespace Alepha::Hydrogen
 		template
 		<
 			typename T,
-			typename= std::enable_if_t< has_comparable_capability_v< T > >,
+			typename= std::enable_if_t< has_comparable_capability( Meta::type_value< T >{} ) >,
 			typename= std::enable_if_t< has_spaceship_lens_member_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
