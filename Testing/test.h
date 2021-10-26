@@ -15,6 +15,8 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 
 #include <Alepha/console.h>
 #include <Alepha/types.h>
+#include <Alepha/Utility/evaluation.h>
+#include <Alepha/Utility/StaticValue.h>
 
 namespace Alepha::Hydrogen::Testing
 {
@@ -34,6 +36,8 @@ namespace Alepha::Hydrogen::Testing
 		}
 
 		using namespace std::literals::string_literals;
+		using namespace Utility::exports::evaluation;
+		using namespace Utility::exports::static_value;
 
 		struct TestName
 		{
@@ -65,12 +69,8 @@ namespace Alepha::Hydrogen::Testing
 			}
 		}
 
-		inline auto &
-		registry()
-		{
-			static std::vector< std::tuple< std::string, bool, std::function< void() > > > registry;
-			return registry;
-		}
+		StaticValue< std::vector< std::tuple< std::string, bool, std::function< void() > > > > registry;
+		auto initRegistry= enroll <=registry;
 
 		// It is okay to discard this, if making tests in an enroll block.
 		inline auto
