@@ -24,7 +24,13 @@ namespace
 	using namespace Alepha::exports::comparisons;
 	using namespace Alepha::exports::capabilities;
 
-	template< typename= int, typename= Capabilities< comparable >, typename= float, typename= Capabilities< short > >
+	template
+	<
+		typename= int,
+		typename= Capabilities< comparable >,
+		typename= float,
+		typename= Capabilities< short >
+	>
 	struct Date_core
 	{
 		int y;
@@ -35,7 +41,19 @@ namespace
 	};
 
 	using Date= Date_core<>;
-	static_assert( Alepha::has_capability_v< Date, comparable > );
+	namespace detail= Alepha::detail::capabilities;
+
+	namespace Meta= Alepha::Meta;
+
+	constexpr Meta::Container::vector< short, long, int, int, std::string, std::vector< int >, long, void, void > vec;
+	constexpr Meta::type_value< int > val;
+	using std::begin, std::end;
+
+	static_assert( Meta::find_if( begin( vec ), end( vec ), Meta::bind1st( Meta::is_same, Meta::type_value< int >{} ) ) );
+	static_assert( not Meta::find_if( begin( vec ), end( vec ), Meta::bind1st( Meta::is_same, Meta::type_value< double >{} ) ) );
+
+	static_assert( detail::is_capability_list_v< Capabilities< comparable > > );
+	static_assert( Alepha::has_capability( Meta::type_value< Date >{}, comparable_capability ) );
 
 	template< template< typename > class op, typename T >
 	constexpr bool

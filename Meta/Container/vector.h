@@ -15,6 +15,29 @@ namespace Alepha::Hydrogen::Meta::Container
 		inline namespace exports
 		{
 			template< typename ... Members > struct vector;
+
+			template< typename ... Members >
+			constexpr auto
+			template_for( vector< Members... > );
+		}
+
+		template< typename ... Members >
+		struct template_for_binder
+		{
+			template< typename Body >
+			constexpr void
+			operator <=( Body b )
+			{
+				auto wrapper= [&]( auto element ) { b( element ); return nullptr; };
+				std::nullptr_t loop[]= { wrapper( type_value< Members >{} )... };
+			}
+		};
+
+		template< typename ... Members >
+		constexpr auto
+		exports::template_for( vector< Members... > )
+		{
+			return template_for_binder< Members... >{};
 		}
 
 		template< typename Vector >
@@ -44,6 +67,22 @@ namespace Alepha::Hydrogen::Meta::Container
 		{
 			vector_iterator< List > iter;
 		};
+
+		template< typename MetaFunction, typename Arg1, typename First, typename ... Members >
+		constexpr decltype( auto )
+		invoke_call( MetaFunction func, type_value< Arg1 > arg1, dereferenced_iterator< vector< First, Members... > > deref )
+		{
+			if( deref.iter.offset == 0 ) return func( arg1, type_value< First >{} );
+			else return invoke_call( func, arg1, dereferenced_iterator< vector< Members... > >{ deref.iter.offset - 1 } );
+		}
+
+		template< typename MetaFunction, typename Arg1, typename First >
+		constexpr decltype( auto )
+		invoke_call( MetaFunction func, type_value< Arg1 > arg1, dereferenced_iterator< vector< First > > deref )
+		{
+			if( deref.iter.offset == 0 ) return func( arg1, type_value< First >{} );
+			else throw "Out of bounds iterator";
+		}
 		
 		template< typename First, typename ... Members, typename Value >
 		constexpr bool

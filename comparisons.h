@@ -25,9 +25,11 @@ namespace Alepha::Hydrogen
 
 		struct comparable {};
 
+
 		namespace exports
 		{
 			using detail::comparisons::comparable;
+			inline constexpr Meta::type_value< comparable > comparable_capability;
 		}
 
 		template< typename T >

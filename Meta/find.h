@@ -4,7 +4,7 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 
 #include <Alepha/Alepha.h>
 
-#include <tuple>
+#include <functional>
 
 #include <Alepha/Meta/Container/vector.h>
 #include <Alepha/Meta/functional.h>
@@ -17,29 +17,23 @@ namespace Alepha::Hydrogen::Meta
 	{
 		inline namespace exports
 		{
-			template< typename Predicate, typename Tuple >
-			struct find_if;
+			template< typename Iter, typename Predicate >
+			constexpr bool
+			find_if( const Iter first, const Iter last, Predicate pred )
+			{
+				for( Iter pos= first; pos != last; ++pos )
+				{
+					if( pred( *pos ) ) return true;
+				}
+				return false;
+			}
 
-			template< typename Predicate, typename First, typename ... Elements >
-			struct find_if< Predicate, Container::vector< First, Elements... > >
-				: std::conditional_t
-				<
-					Meta::call< Predicate, First >::value,
-					std::true_type,
-					find_if< Predicate, Container::vector< Elements... > >
-				>::type {};
-
-			template< typename Predicate >
-			struct find_if< Predicate, Container::vector<> > : std::false_type {};
-
-			template< typename Predicate, typename List >
-			constexpr bool find_if_v= find_if< Predicate, List >::value;
-		}
-
-		namespace exports
-		{
-			template< typename Key, typename Argument >
-			constexpr bool find_v= find_if_v< Meta::bind1st< std::is_same, Key >, Argument >;
+			template< typename Iter, typename Value >
+			constexpr bool
+			find( const Iter first, const Iter last, const Value value )
+			{
+				return find_if( first, last, Meta::bind1st( std::equal_to{}, value ) );
+			}
 		}
 	}
 

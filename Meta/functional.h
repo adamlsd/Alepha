@@ -14,24 +14,38 @@ namespace Alepha::Hydrogen::Meta
 	{
 		inline namespace exports
 		{
-			template< template< typename, typename > class Function, typename First >
-			struct bind1st
-			{
-				using type= bind1st;
-				template< typename Arg >
-				struct call : Function< First, Arg >::type {};
-			};
+			template< typename MetaFunction, typename Arg >
+			constexpr auto bind1st( MetaFunction func, Arg arg );
+		}
 
-			template< template< typename, typename > class Function, typename Second >
-			struct bind2nd
-			{
-				using type= bind2nd;
-				template< typename Arg >
-				struct call : Function< Arg, Second >::type {};
-			};
+		template< typename MetaFunction, typename Arg > struct binder1st;
 
-			template< typename Function, typename ... Args >
-			struct call : Function::template call< Args... > {};
+		template< typename MetaFunction, typename Arg1, typename Arg2 >
+		constexpr decltype( auto )
+		invoke_call( MetaFunction func, Meta::type_value< Arg1 > arg1, Meta::type_value< Arg2 > arg2 )
+		{
+			return func( arg1, arg2 );
+		}
+
+		template< typename MetaFunction, typename Arg >
+		struct binder1st< MetaFunction, Meta::type_value< Arg > >
+		{
+			MetaFunction func;
+			Meta::type_value< Arg > arg;
+
+			template< typename Second >
+			constexpr decltype( auto )
+			operator () ( const Second &second )
+			{
+				return invoke_call( func, arg, second );
+			}
+		};
+
+		template< typename MetaFunction, typename Arg >
+		constexpr auto
+		exports::bind1st( MetaFunction func, Arg arg )
+		{
+			return binder1st< MetaFunction, Arg >{ func, arg };
 		}
 	}
 

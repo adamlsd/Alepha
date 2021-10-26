@@ -1,8 +1,9 @@
 static_assert( __cplusplus > 201700, "C++17 Required" );
 
 #include <Alepha/Meta/is_sequence.h>
-
 #include <Alepha/Meta/is_streamable.h>
+#include <Alepha/Meta/type_value.h>
+#include <Alepha/Meta/Container/vector.h>
 
 #include <Alepha/Testing/test.h>
 
@@ -20,6 +21,8 @@ namespace
 {
 	using namespace Alepha::Utility::evaluation;
 	using namespace Alepha::Testing::literals;
+
+	using std::begin, std::end;
 
 	// These tests never actually fail at runtime, but they provide a simple way to have them
 	// as unit tests.  There's no call to actually assert them at runtime.  If this test built,
@@ -115,6 +118,25 @@ namespace
 			static_assert( not Alepha::Meta::is_streamable_v< void > );
 		};
 	};
+
+	namespace MetaContainer= Alepha::Meta::Container::exports;
+	using Alepha::Meta::type_value;
+	constexpr MetaContainer::vector< int, float, char > my_list;
+
+	template< typename First, typename Last, typename Type >
+	constexpr bool
+	containsChar( First first, Last last, type_value< Type > value )
+	{
+		for( auto pos= first; pos != last; ++pos )
+		{
+			if( *pos == value ) return true;
+		}
+		return false;
+	}
+
+	static_assert( containsChar( begin( my_list ), end( my_list ), type_value< char >{} ) );
+	static_assert( not containsChar( begin( my_list ), end( my_list ), type_value< long double >{} ) );
+	static_assert( containsChar( begin( my_list ), end( my_list ), type_value< int >{} ) );
 }
 
 
