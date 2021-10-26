@@ -57,7 +57,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< has_spaceship_lens_member_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		decltype( auto )
+		constexpr decltype( auto )
 		spaceship_lens( T &t )
 		{
 			return t.spaceship_lens();
@@ -91,7 +91,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< has_value_lens_member_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		decltype( auto )
+		constexpr decltype( auto )
 		value_lens( T &t )
 		{
 			return t.value_lens();
@@ -104,7 +104,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_spaceship_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		decltype( auto )
+		constexpr decltype( auto )
 		value_lens( T &t )
 		{
 			return spaceship_lens( t );
@@ -137,7 +137,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< has_equality_lens_member_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		decltype( auto )
+		constexpr decltype( auto )
 		equality_lens( T &t )
 		{
 			return t.equality_lens();
@@ -150,7 +150,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_value_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		decltype( auto )
+		constexpr decltype( auto )
 		equality_lens( T &t )
 		{
 			return value_lens( t );
@@ -221,7 +221,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_equality_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		bool
+		constexpr bool
 		operator == ( const T &lhs, const T &rhs )
 		{
 			return equality_lens( lhs ) == equality_lens( rhs );
@@ -234,7 +234,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_equality_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		bool
+		constexpr bool
 		operator != ( const T &lhs, const T &rhs )
 		{
 			return equality_lens( lhs ) != equality_lens( rhs );
@@ -247,7 +247,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		bool
+		constexpr bool
 		operator < ( const T &lhs, const T &rhs )
 		{
 			return strict_weak_order_lens( lhs ) < strict_weak_order_lens( rhs );
@@ -260,7 +260,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		bool
+		constexpr bool
 		operator > ( const T &lhs, const T &rhs )
 		{
 			return strict_weak_order_lens( lhs ) > strict_weak_order_lens( rhs );
@@ -273,7 +273,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		bool
+		constexpr bool
 		operator <= ( const T &lhs, const T &rhs )
 		{
 			return strict_weak_order_lens( lhs ) <= strict_weak_order_lens( rhs );
@@ -286,7 +286,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		bool
+		constexpr bool
 		operator >= ( const T &lhs, const T &rhs )
 		{
 			return strict_weak_order_lens( lhs ) >= strict_weak_order_lens( rhs );
@@ -301,7 +301,7 @@ namespace Alepha::Hydrogen
 		namespace exports
 		{
 			template< typename ... Args >
-			auto
+			constexpr auto
 			ordering_magma( Args && ... args )
 			{
 				return magma_hook< Args... >{ std::tie( std::forward< Args >( args )... ) };
@@ -311,7 +311,7 @@ namespace Alepha::Hydrogen
 		// TODO: Sort out the linear-trichotomous problem.
 
 		template< typename comp, std::size_t index= 0, typename ... Args >
-		bool
+		constexpr bool
 		compOp( const std::tuple< Args... > &lhs, const std::tuple< Args... > &rhs )
 		{
 			if constexpr( index == sizeof...( Args ) ) return false;
@@ -326,14 +326,14 @@ namespace Alepha::Hydrogen
 		}
 
 		template< typename ... Args >
-		bool
+		constexpr bool
 		operator < ( const magma_hook< Args... > &lhs, const magma_hook< Args... > &rhs )
 		{
 			return compOp< std::less<> >( lhs.view, rhs.view );
 		}
 
 		template< typename ... Args >
-		bool
+		constexpr bool
 		operator > ( const magma_hook< Args... > &lhs, const magma_hook< Args... > &rhs )
 		{
 			return compOp< std::greater<> >( lhs.view, rhs.view );
@@ -341,7 +341,7 @@ namespace Alepha::Hydrogen
 
 
 		template< typename comp, std::size_t index= 0, typename ... Args >
-		bool
+		constexpr bool
 		comp_eqOp( const std::tuple< Args... > &lhs, const std::tuple< Args... > &rhs )
 		{
 			if constexpr( index == sizeof...( Args ) ) return true;
@@ -356,21 +356,21 @@ namespace Alepha::Hydrogen
 		}
 
 		template< typename ... Args >
-		bool
+		constexpr bool
 		operator <= ( const magma_hook< Args... > &lhs, const magma_hook< Args... > &rhs )
 		{
 			return comp_eqOp< std::less_equal<> >( lhs.view, rhs.view );
 		}
 
 		template< typename ... Args >
-		bool
+		constexpr bool
 		operator >= ( const magma_hook< Args... > &lhs, const magma_hook< Args... > &rhs )
 		{
 			return comp_eqOp< std::greater_equal<> >( lhs.view, rhs.view );
 		}
 
 		template< std::size_t index= 0, typename ... Args >
-		bool
+		constexpr bool
 		eq( const std::tuple< Args... > &lhs, const std::tuple< Args... > &rhs )
 		{
 			if constexpr( index == sizeof...( Args ) ) return true;
@@ -383,14 +383,14 @@ namespace Alepha::Hydrogen
 		}
 
 		template< typename ... Args >
-		bool
+		constexpr bool
 		operator == ( const magma_hook< Args... > &lhs, const magma_hook< Args... > &rhs )
 		{
 			return eq( lhs.view, rhs.view );
 		}
 
 		template< std::size_t index= 0, typename ... Args >
-		bool
+		constexpr bool
 		ne( const std::tuple< Args... > &lhs, const std::tuple< Args... > &rhs )
 		{
 			if constexpr( index == sizeof...( Args ) ) return false;
@@ -403,7 +403,7 @@ namespace Alepha::Hydrogen
 		}
 
 		template< typename ... Args >
-		bool
+		constexpr bool
 		operator != ( const magma_hook< Args... > &lhs, const magma_hook< Args... > &rhs )
 		{
 			return ne( lhs, rhs );
