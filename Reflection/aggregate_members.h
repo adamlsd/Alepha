@@ -23,8 +23,43 @@ namespace Alepha::Hydrogen::Reflection
 
 		using Meta::overload;
 
-		// Basic methodology here: The number of members in an aggregate is equal to the number of initializer parameters
-		// it takes less the number of empty base classes it has.
+		/*!
+		 * Basic methodology here.
+		 *
+		 * The number of members in an aggregate is equal to the number of initializer parameters it takes less
+		 * the number of empty base classes it has.  In simple terms, this would be `init_terms< T > - empty_bases< T >`,
+		 * However, it's not that simple.  To do that the easy way, one might need get `std::tuple< InitTerms... >` and then compute
+		 * which terms were bases.  Now that gets a bit complicated, as in C++ one can't just directly get a tuple of initializer
+		 * arguments (portably) to scoop out the arguments and analyze them one-by-one.  One can, however, constrain the arguments
+		 * one-by-one in templates.  Those constraints cannot directly leak out the types they conclude, as that requires side
+		 * effects.  (Yes, template-friend-injection can be used here, but these mechanisms are extremely delicate.  They're
+		 * not really portable.  Further, the way that constraints get instantiated for matching is prone to complications.)
+		 *
+		 * Instead, a side-stepping approach is required.  It's trivial to ask: "Can this object be constructed from these
+		 * N adaptive types, where the first one is constrained to be a base class of your object's type?"  If yes, then
+		 * this proves a (likely) empty base.  One can just recursively iterate through more an more constrained adaptive
+		 * types until the first non-base type is reached.  At this point, there are no more than that many base classes.
+		 *
+		 * There may actually be fewer base classes, however.  Consider:
+		 *
+		 * ```
+		 * struct SneakyBase {};
+		 *
+		 * struct Complicated : SneakyBase
+		 * {
+		 *	SneakyBase member;
+		 * };
+		 * ```
+		 * In that case, a constrained adaptable argument would see two base types.  Here is where a bit of C++ trivia and
+		 * knowledge comes into play.  C++ forbids repetition of a base class's type.  Therefore the sequence of base classes
+		 * cannot have repeats.  The solution is to perform a nested exploration of instantiations of `checker` types which
+		 * has each descent disable casting to `std::is_base_of_v` types which already have been expanded.  Thus whatever
+		 * count this expands to, it will be the correct empty-bases count.  Then that count can be subtracted from the
+		 * initializer list count.
+		 *
+		 * Note that this will not work with types that have non-empty bases, but those types cannot be decomposed,
+		 * anyhow.  Such types cannot have C++17 reflection performed on them.
+		 */
 
 		// The basic adaptable argument.  Because it pretends to be anything, it can be used as a parameter in invoking
 		// any initialization method.
