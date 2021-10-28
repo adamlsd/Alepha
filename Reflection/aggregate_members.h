@@ -12,6 +12,7 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 #include <Alepha/Reflection/aggregate_initialization.h>
 
 #include <Alepha/Meta/overload.h>
+#include <Alepha/Meta/type_value.h>
 
 namespace Alepha::Hydrogen::Reflection
 {
@@ -91,6 +92,12 @@ namespace Alepha::Hydrogen::Reflection
 			//template< typename T > constexpr operator T ()= delete;
 		};
 
+		template< typename T >
+		constexpr bool is_empty_base_v= false;
+
+		template< typename T >
+		constexpr bool is_empty_base_v< empty_base< T > >{ true };
+
 		template< typename Tuple, std::size_t baseCount, std::size_t totalCount >
 		constexpr void
 		check_tuple()
@@ -134,23 +141,46 @@ namespace Alepha::Hydrogen::Reflection
 		template< typename T, typename Tuple >
 		constexpr bool is_constructible_from_tuple_v= is_constructible_from_tuple< T, Tuple >::value;
 
+		template< typename T, typename InitTuple, std::size_t index= 0, typename= std::enable_if_t< std::is_aggregate_v< T > > >
+		constexpr auto
+		build_base_tuple()
+		{
+			constexpr auto init_size= aggregate_initializer_size_v< T >;
+
+			using DeeperTuple= decltype( build_init_tuple< T, index, init_size >() );
+
+			if constexpr( is_constructible_from_tuple_v< T, DeeperTuple > )
+			{
+				return build_base_tuple< T, DeeperTuple, index + 1 >();
+			}
+			else return Meta::type_value< InitTuple >{};
+		}
+
+		template< typename ... Args, typename First >
+		constexpr std::size_t
+		count_empty_bases( Meta::type_value< std::tuple< First, Args... > > )
+		{
+			if constexpr( is_empty_base_v< First > ) return 1 + count_empty_bases( Meta::type_value< std::tuple< Args... > >{} );
+			else return 0;
+		}
+
+		constexpr std::size_t
+		count_empty_bases( Meta::type_value< std::tuple<> > )
+		{
+			return 0;
+		}
+
 		template< typename T, std::size_t index= 0, typename= std::enable_if_t< std::is_aggregate_v< T > > >
 		constexpr std::size_t
 		count_empty_bases()
 		{
-			constexpr auto init_size= aggregate_initializer_size_v< T >;
-
-			if constexpr( is_constructible_from_tuple_v< T, decltype( build_init_tuple< T, index, init_size >() ) > )
-			{
-				return 1 + count_empty_bases< T, index + 1 >();
-			}
-			else return 0;
+			return count_empty_bases( build_base_tuple< T, decltype( build_init_tuple< T, 0, aggregate_initializer_size_v< T > > ) >() );
 		}
 
 		namespace exports
 		{
 			template< typename T >
-			struct aggregate_empty_bases : std::integral_constant< std::size_t, count_empty_bases< T >() - 1 > {};
+			struct aggregate_empty_bases : std::integral_constant< std::size_t, count_empty_bases< T >() > {};
 
 			template< typename T >
 			constexpr std::size_t aggregate_empty_bases_v= aggregate_empty_bases< T >::value;
