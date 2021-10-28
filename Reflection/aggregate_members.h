@@ -60,6 +60,10 @@ namespace Alepha::Hydrogen::Reflection
 		 *
 		 * Note that this will not work with types that have non-empty bases, but those types cannot be decomposed,
 		 * anyhow.  Such types cannot have C++17 reflection performed on them.
+		 *
+		 * For the moment, computing a deep-dive on constrainted adaptable arguments is skipped.  It's a lot more
+		 * complicated than just counting empty bases.  As long as the first actual member is not also a base class,
+		 * this technique will work.
 		 */
 
 		// The basic adaptable argument.  Because it pretends to be anything, it can be used as a parameter in invoking
