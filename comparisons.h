@@ -6,8 +6,11 @@ static_assert( __cplusplus > 201700, "C++17 Required" );
 
 #include <type_traits>
 
-#include <Alepha/Meta/overload.h>
+#include <Alepha/Meta/dep_value.h>
+
 #include <Alepha/Capabilities.h>
+
+#include <Alepha/Meta/overload.h>
 
 
 namespace Alepha::Hydrogen
@@ -20,11 +23,7 @@ namespace Alepha::Hydrogen
 
 		using namespace Meta::exports::template_overload;
 
-		// Basic capability support
-		// TODO: non-base-type capability via ADL rules on templates.
-
 		struct comparable {};
-
 
 		namespace exports
 		{
@@ -74,6 +73,14 @@ namespace Alepha::Hydrogen
 		template< typename T >
 		constexpr bool supports_spaceship_lens_v= supports_spaceship_lens< T >::value;
 
+		template< typename T >
+		constexpr decltype( auto )
+		make_spaceship_lens( T &t )
+		{
+			if constexpr( supports_spaceship_lens_v< T > ) return spaceship_lens( t );
+			//else if constexpr( supports_default_lens_v< T > ) return default_lens( t );
+			else static_assert( Meta::dep_value< false, T > );
+		}
 
 		// Value lens support
 
@@ -121,6 +128,15 @@ namespace Alepha::Hydrogen
 		template< typename T >
 		constexpr bool supports_value_lens_v= supports_value_lens< T >::value;
 
+		template< typename T >
+		constexpr decltype( auto )
+		make_value_lens( T &t )
+		{
+			if constexpr( supports_value_lens_v< T > ) return value_lens( t );
+			//else if constexpr( supports_default_lens_v< T > ) return default_lens( t );
+			else static_assert( Meta::dep_value< false, T > );
+		}
+
 		// Equality Lens support
 
 		template< typename T, typename= void >
@@ -167,6 +183,14 @@ namespace Alepha::Hydrogen
 		template< typename T >
 		constexpr bool supports_equality_lens_v= supports_equality_lens< T >::value;
 
+		template< typename T >
+		constexpr decltype( auto )
+		make_equality_lens( T &t )
+		{
+			if constexpr( supports_equality_lens_v< T > ) return equality_lens( t );
+			//else if constexpr( supports_default_lens_v< T > ) return default_lens( t );
+			else static_assert( Meta::dep_value< false, T > );
+		}
 
 		// Strict weak order lens support
 
@@ -186,7 +210,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< has_strict_weak_order_lens_member_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		decltype( auto )
+		constexpr decltype( auto )
 		strict_weak_order_lens( T &t )
 		{
 			return t.strict_weak_order_lens();
@@ -199,7 +223,7 @@ namespace Alepha::Hydrogen
 			typename= std::enable_if_t< supports_value_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
-		decltype( auto )
+		constexpr decltype( auto )
 		strict_weak_order_lens( T &t )
 		{
 			return value_lens( t );
@@ -214,84 +238,86 @@ namespace Alepha::Hydrogen
 		template< typename T >
 		constexpr bool supports_strict_weak_order_lens_v= supports_strict_weak_order_lens< T >::value;
 
+		template< typename T >
+		constexpr decltype( auto )
+		make_strict_weak_order_lens( T &t )
+		{
+			if constexpr( supports_strict_weak_order_lens_v< T > ) return strict_weak_order_lens( t );
+			//else if constexpr( supports_default_lens_v< T > ) return default_lens( t );
+			else static_assert( Meta::dep_value< false, T > );
+		}
 
 		// Operator support:
 		template
 		<
 			typename T,
 			typename= std::enable_if_t< has_comparable_capability_v< T > >,
-			typename= std::enable_if_t< supports_equality_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
 		constexpr bool
 		operator == ( const T &lhs, const T &rhs )
 		{
-			return equality_lens( lhs ) == equality_lens( rhs );
+			return make_equality_lens( lhs ) == make_equality_lens( rhs );
 		}
 
 		template
 		<
 			typename T,
 			typename= std::enable_if_t< has_comparable_capability_v< T > >,
-			typename= std::enable_if_t< supports_equality_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
 		constexpr bool
 		operator != ( const T &lhs, const T &rhs )
 		{
-			return equality_lens( lhs ) != equality_lens( rhs );
+			return make_equality_lens( lhs ) != make_equality_lens( rhs );
 		}
 
 		template
 		<
 			typename T,
 			typename= std::enable_if_t< has_comparable_capability_v< T > >,
-			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
 		constexpr bool
 		operator < ( const T &lhs, const T &rhs )
 		{
-			return strict_weak_order_lens( lhs ) < strict_weak_order_lens( rhs );
+			return make_strict_weak_order_lens( lhs ) < make_strict_weak_order_lens( rhs );
 		}
 
 		template
 		<
 			typename T,
 			typename= std::enable_if_t< has_comparable_capability_v< T > >,
-			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
 		constexpr bool
 		operator > ( const T &lhs, const T &rhs )
 		{
-			return strict_weak_order_lens( lhs ) > strict_weak_order_lens( rhs );
+			return make_strict_weak_order_lens( lhs ) > make_strict_weak_order_lens( rhs );
 		}
 
 		template
 		<
 			typename T,
 			typename= std::enable_if_t< has_comparable_capability_v< T > >,
-			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
 		constexpr bool
 		operator <= ( const T &lhs, const T &rhs )
 		{
-			return strict_weak_order_lens( lhs ) <= strict_weak_order_lens( rhs );
+			return make_strict_weak_order_lens( lhs ) <= make_strict_weak_order_lens( rhs );
 		}
 
 		template
 		<
 			typename T,
 			typename= std::enable_if_t< has_comparable_capability_v< T > >,
-			typename= std::enable_if_t< supports_strict_weak_order_lens_v< T > >,
 			overload< __LINE__ > = nullptr
 		>
 		constexpr bool
 		operator >= ( const T &lhs, const T &rhs )
 		{
-			return strict_weak_order_lens( lhs ) >= strict_weak_order_lens( rhs );
+			return make_strict_weak_order_lens( lhs ) >= make_strict_weak_order_lens( rhs );
 		}
 
 		template< typename ... Args >

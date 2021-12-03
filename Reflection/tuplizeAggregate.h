@@ -15,7 +15,30 @@ namespace Alepha::Hydrogen::Reflection
 
 	namespace detail::tuplize_aggregate
 	{
-		inline namespace exports
+		inline namespace exports {}
+
+		template< typename T, typename= void >
+		struct has_salient_members_constant : std::false_type {};
+
+		template< typename T >
+		struct has_salient_members_constant< T, std::void_t< decltype( T::salient_members ) > >
+			: std::true_type {};
+
+		template< typename T >
+		constexpr bool has_salient_members_constant_v= has_salient_members_constant< T >::value;
+
+		template< typename T >
+		constexpr std::size_t
+		compute_salient_members_count_impl()
+		{
+			if constexpr( has_salient_members_constant_v< T > ) return T::salient_members;
+			else return aggregate_member_count_v< std::decay_t< T > >;
+		}
+
+		template< typename T >
+		constexpr std::size_t compute_salient_members_count_v= compute_salient_members_count_impl< T >();
+
+		namespace exports
 		{
 			/*!
 			 * Deconstruct an aggregate object into a tie-based tuple pointing at its members.
@@ -170,7 +193,7 @@ namespace Alepha::Hydrogen::Reflection
 			constexpr decltype( auto )
 			tuplizeAggregate( Aggregate &&agg )
 			{
-				return tuplizeAggregate< aggregate_member_count_v< std::decay_t< Aggregate > > >( std::forward< Aggregate >( agg ) );
+				return tuplizeAggregate< compute_salient_members_count_v< std::decay_t< Aggregate > > >( std::forward< Aggregate >( agg ) );
 			}
 		}
 	}

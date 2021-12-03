@@ -4,6 +4,8 @@ static_assert( __cplusplus > 2017, "C++17 Required" );
 
 #include <Alepha/Alepha.h>
 
+#include <type_traits>
+
 namespace Alepha::Hydrogen::Meta
 {
 	inline namespace exports { inline namespace type_value_wrapper {} }
