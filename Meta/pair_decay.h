@@ -12,7 +12,7 @@ namespace Alepha::Hydrogen::Meta
 {
 	inline namespace exports { inline namespace type_traits {} }
 
-	namespace detail::type_traits::pair_decay
+	namespace detail::type_traits::pair_decay_trait
 	{
 		inline namespace exports
 		{
@@ -29,8 +29,8 @@ namespace Alepha::Hydrogen::Meta
 		}
 	}
 
-	namespace exports::type_traits
+	namespace exports::type_traits::inline pair_decay_trait
 	{
-		using namespace detail::type_traits::pair_decay::exports;
+		using namespace detail::type_traits::pair_decay_trait::exports;
 	}
 }
