@@ -97,13 +97,28 @@ namespace Alepha::Hydrogen::Testing
 		inline auto
 		operator <= ( TestName name, std::function< Integer () > test )
 		{
-			auto wrapper= [test]
+			if constexpr( std::is_same_v< Integer, bool > )
 			{
-				const int failures= test();
-				if( failures > 0 ) throw TestFailureException{ failures };
-			};
+				auto wrapper= [test]
+				{
+					if( not test )
+					{
+						throw TestFailureException{ 1 };
+					}
+				};
 
-			return name <= wrapper;
+				return name <= wrapper;
+			}
+			else
+			{
+				auto wrapper= [test]
+				{
+					const int failures= test();
+					if( failures > 0 ) throw TestFailureException{ failures };
+				};
+
+				return name <= wrapper;
+			}
 		}
 
 		namespace exports
