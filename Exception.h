@@ -163,13 +163,25 @@ namespace Alepha::Hydrogen
 		template< typename T >
 		concept DerivedFromException= std::is_base_of_v< Exception, T >;
 
-
-		class NamedResourceThrowable
-			: public virtual bases< Throwable >
+		class NamedResourceStorage;
+		class NamedResourceInterface
 		{
 			public:
+				using storage_type= NamedResourceStorage;
+
+				virtual ~NamedResourceInterface()= default;
 				virtual std::string_view resourceName() const noexcept= 0;
 		};
+		class NamedResourceStorage
+			: virtual public NamedResourceInterface
+		{
+			private:
+				std::string storage;
+
+			public:
+				std::string_view resourceName() const noexcept final { return storage; }
+		};
+		class NamedResourceThrowable : virtual public bases< Throwable, NamedResourceInterface > {};
 		class AnyTaggedNamedResourceThrowable
 			: virtual public bases< NamedResourceThrowable, AnyTaggedThrowable > {};
 		template< typename tag >
@@ -209,12 +221,25 @@ namespace Alepha::Hydrogen
 			: public virtual bases< AnyTaggedNamedResourceViolation, TaggedViolation< tag >, TaggedNamedResourceThrowable< tag > > {};
 
 
-		class AllocationThrowable
-			: public virtual bases< Throwable >
+		class AllocationAmountStorage;
+		class AllocationAmountInterface
 		{
 			public:
+				using storage_type= AllocationAmountStorage;
+				virtual ~AllocationAmountInterface()= default;
 				virtual std::size_t allocationAmount() const noexcept= 0;
 		};
+		class AllocationAmountStorage
+			: virtual public AllocationAmountInterface
+		{
+			private:
+				std::size_t amount;
+
+			public:
+				std::size_t allocationAmount() const noexcept final { return amount; }
+		};
+		class AllocationThrowable
+			: public virtual bases< Throwable, AllocationAmountInterface > {};
 		class AnyTaggedAllocationThrowable
 			: public virtual bases< AllocationThrowable, AnyTaggedThrowable > {};
 		template< typename tag >
@@ -255,16 +280,6 @@ namespace Alepha::Hydrogen
 				explicit MessageStorage( std::string storage ) : storage( std::move( storage ) ) {}
 
 				const char *message() const noexcept { return storage.c_str(); }
-		};
-
-		class AllocationAmountStorage
-			: virtual public AllocationThrowable
-		{
-			private:
-				std::size_t storage;
-
-			public:
-				std::size_t allocationAmount() const noexcept final { return storage; }
 		};
 
 		class AllocationExceptionBridge
