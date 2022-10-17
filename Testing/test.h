@@ -101,7 +101,7 @@ namespace Alepha::Hydrogen::Testing
 			{
 				auto wrapper= [test]
 				{
-					if( not test )
+					if( not test() )
 					{
 						throw TestFailureException{ 1 };
 					}
