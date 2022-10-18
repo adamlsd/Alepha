@@ -33,7 +33,13 @@ namespace
 	{
 		try
 		{
-			throw Alepha::build_exception< Alepha::TaggedAllocationException< struct tag > >( "This is my allocation exception" );
+			auto exc= Alepha::build_exception< Alepha::TaggedAllocationException< struct tag > >( "This is my allocation exception" );
+			static_assert( std::is_same_v< decltype( exc )::grade_type, Alepha::Exception > );
+			static_assert( std::is_same_v< Alepha::AnyTaggedException::grade_type, Alepha::Exception > );
+			static_assert( std::is_same_v< typename Alepha::TaggedException< struct bob >::grade_type, Alepha::Exception > );
+			static_assert( std::is_same_v< typename Alepha::TaggedThrowable< struct bob >::grade_type, Alepha::Throwable > );
+			static_assert( std::is_same_v< typename Alepha::TaggedViolation< struct bob >::grade_type, Alepha::Violation > );
+			throw exc;
 		}
 		catch( const CatchException &ex )
 		{
@@ -76,19 +82,24 @@ namespace
 			return true;
 		};
 
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, std::bad_alloc >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, std::exception >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::Throwable >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedThrowable >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedThrowable< tag > >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::Exception >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedException >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedException< tag > >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AllocationThrowable >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedAllocationThrowable >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedAllocationThrowable< tag > >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AllocationException >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedAllocationException >;
-		"catch"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedAllocationException< tag > >;
+		"catch.std::bad_alloc"_test <=catchable< Alepha::TaggedAllocationException< tag >, std::bad_alloc >;
+		"catch.std::exception"_test <=catchable< Alepha::TaggedAllocationException< tag >, std::exception >;
+		"catch.Alepha::Throwable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::Throwable >;
+		"catch.Alepha::AnyTaggedThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedThrowable >;
+		"catch.Alepha::TaggedThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedThrowable< tag > >;
+		"catch.Alepha::Exception"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::Exception >;
+		"catch.Alepha::AnyTaggedException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedException >;
+		"catch.Alepha::TaggedException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedException< tag > >;
+		"catch.Alepha::AllocationThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AllocationThrowable >;
+		"catch.Alepha::AnyTaggedAllocationThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedAllocationThrowable >;
+		"catch.Alepha::TaggedAllocationThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedAllocationThrowable< tag > >;
+		"catch.Alepha::AllocationException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AllocationException >;
+		"catch.Alepha::AnyTaggedAllocationException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedAllocationException >;
+		"catch.Alepha::TaggedAllocationException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedAllocationException< tag > >;
+
+		"size_probe"_test <=[]
+		{
+			std::cout << "Size: " << sizeof( Alepha::build_exception< Alepha::TaggedAllocationException< tag > >( "Message" ) ) << std::endl;
+		};
 	};
 }
