@@ -41,7 +41,7 @@ namespace Alepha::Hydrogen::Reflection
 			: std::integral_constant< std::size_t, seq::size() > {};
 
 		// This expansion case always matches when an initializer of the number of elements in the sequence is syntactically
-		// valid.  It also recurses, thus exploring the whole initializer set.  There is have one fewer value in the sequence set
+		// valid.  It also recurses, thus exploring the whole initializer set.  There is one fewer value in the sequence set
 		// than we use to initialize so that when SFINAE gives up, it defers to the base case above, thus having the right
 		// count.
 		template< typename T, std::size_t ... values >
