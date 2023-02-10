@@ -8,6 +8,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <string>
 #include <exception>
+#include <stdexcept>
 #include <string_view>
 #include <typeindex>
 
@@ -25,6 +26,8 @@ namespace Alepha::Hydrogen
 		 *
 		 *  * `Throwable`: All exceptions inherit from this interface.  Catching this will
 		 *    catch anything which is part of this system.  Normally you just ignore this grade.
+		 *    Code that needs to catch *everything* should not catch `Throwable`, but `catch( ... )`
+		 *    instead.
 		 *
 		 *  * `Notification`: When a thread is cancelled using interrupts, all exceptions thrown
 		 *    to do so are derived from this type.  Alepha threads are setup to catch and discard
@@ -35,13 +38,15 @@ namespace Alepha::Hydrogen
 		 *    data pack to facilitate a proper programmatic recovery.  All exceptions of this grade
 		 *    will also have `std::exception` as one of its bases, thus code which is unaware of
 		 *    Alepha exceptions, but handles basic standard exceptions cleanly, will work just fine.
+		 *    When an `Exception` models something that the standard library models, such as
+		 *    `std::bad_alloc`, then that `Exception` will be eligible for catch by that base as well.
 		 *
 		 *  * `Error`: This exception grade represents a form of moderately-unrecoverable condition.
 		 *    The `Error` grade typically indicates a condition that prevents the current thread or
 		 *    program state from being easily transitioned to a recovered state.  However, a very
-		 *    large state transform, such as a top-of-thread-callstack handler, may be able to
-		 *    recover.  For example, no more available operating system file handles.  Tearing down
-		 *    several client handlers in a multi-client server might alleviate this condition.
+		 *    large state transform, such as an unwind to the top-of-thread-callstack handler, may
+		 *    be able to recover.  For example, no more available operating system file handles.
+		 *    Tearing down several client handlers in a multi-client server might alleviate this condition.
 		 *
 		 *  * `Violation`: This exception grade represents an impossible to recover from condition.
 		 *    Think of the handler for `Violation` as-if it were a `[[noreturn]]` function.  Catch
@@ -297,6 +302,75 @@ namespace Alepha::Hydrogen
 		template< typename tag >
 		using TaggedNamedResourceViolation= NamedResourceViolation::tagged_type< tag >;
 
+		class OutOfRangeThrowable
+			: virtual public synthetic_exception< struct out_of_range_throwable, Throwable > {};
+		using AnyTaggedOutOfRangeThrowable= OutOfRangeThrowable::any_tagged_type;
+		template< typename tag >
+		using TaggedOutOfRangeThrowable= OutOfRangeThrowable::tagged_type< tag >;
+
+		using OutOfRangeException= synthetic_exception< struct out_of_range_throwable, Exception, OutOfRangeThrowable >;
+		using AnyTaggedOutOfRangeException= OutOfRangeException::any_tagged_type;
+		template< typename tag >
+		using TaggedOutOfRangeException= OutOfRangeException::tagged_type< tag >;
+
+		using OutOfRangeError= synthetic_exception< struct out_of_range_throwable, Error, OutOfRangeThrowable >;
+		using AnyTaggedOutOfRangeError= OutOfRangeError::any_tagged_type;
+		template< typename tag >
+		using TaggedOutOfRangeError= OutOfRangeError::tagged_type< tag >;
+
+		using OutOfRangeViolation= synthetic_exception< struct out_of_range_throwable, Violation, OutOfRangeThrowable >;
+		using AnyTaggedOutOfRangeViolation= OutOfRangeViolation::any_tagged_type;
+		template< typename tag >
+		using TaggedOutOfRangeViolation= OutOfRangeViolation::tagged_type< tag >;
+
+		class IndexedRangeInformationStorage;
+		class IndexedRangeInformationInterface
+		{
+			public:
+				using storage_type= IndexedRangeInformationStorage;
+				virtual ~IndexedRangeInformationInterface()= default;
+				virtual std::size_t requested() const noexcept= 0;
+				virtual std::size_t lowerBound() const noexcept= 0;
+				virtual std::size_t upperBound() const noexcept= 0;
+		};
+		class IndexedRangeInformationStorage
+			: virtual public IndexedRangeInformationInterface
+		{
+			private:
+				std::size_t bottom;
+				std::size_t top;
+				std::size_t request;
+
+			public:
+				std::size_t lowerBound() const noexcept override { return bottom; }
+				std::size_t upperBound() const noexcept override { return top; }
+				std::size_t requested() const noexcept override { return request; }
+		};
+		class IndexOutOfRangeThrowable
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, Throwable, OutOfRangeThrowable > {};
+		using AnyTaggedIndexOutOfRangeThrowable= IndexOutOfRangeThrowable::any_tagged_type;
+		template< typename tag >
+		using TaggedIndexOutOfRangeThrowable= IndexOutOfRangeThrowable::tagged_type< tag >;
+
+		class IndexOutOfRangeException
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeException, IndexOutOfRangeThrowable > {};
+		using AnyTaggedIndexOutOfRangeException= IndexOutOfRangeException::any_tagged_type;
+		template< typename tag >
+		using TaggedIndexOutOfRangeException= IndexOutOfRangeException::tagged_type< tag >;
+
+		class IndexOutOfRangeError
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeError, IndexOutOfRangeThrowable > {};
+		using AnyTaggedIndexOutOfRangeError= IndexOutOfRangeError::any_tagged_type;
+		template< typename tag >
+		using TaggedIndexOutOfRangeError= IndexOutOfRangeError::tagged_type< tag >;
+
+
+		class IndexOutOfRangeViolation
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeViolation, IndexOutOfRangeThrowable > {};
+		using AnyTaggedIndexOutOfRangeViolation= IndexOutOfRangeViolation::any_tagged_type;
+		template< typename tag >
+		using TaggedIndexOutOfRangeViolation= IndexOutOfRangeViolation::tagged_type< tag >;
+
 
 		class AllocationAmountStorage;
 		class AllocationAmountInterface
@@ -372,6 +446,23 @@ namespace Alepha::Hydrogen
 
 				class Exception
 					: virtual private Undergird, virtual public Kind, public virtual std::bad_alloc
+				{
+					public:
+						explicit Exception( std::string message ) : MessageStorage( std::move( message ) ) {}
+				};
+
+				return Exception{ std::move( message ) };
+			}
+			else if constexpr( std::is_base_of_v< IndexOutOfRangeException, Kind > )
+			{
+				class Undergird
+					: virtual public Kind, virtual protected GenericExceptionBridge< std::out_of_range >,
+					virtual protected MessageStorage, virtual protected IndexedRangeInformationStorage,
+					virtual public std::out_of_range
+				{};
+
+				class Exception
+					: virtual private Undergird, virtual public Kind, public virtual std::out_of_range
 				{
 					public:
 						explicit Exception( std::string message ) : MessageStorage( std::move( message ) ) {}
