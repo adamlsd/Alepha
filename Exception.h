@@ -383,8 +383,7 @@ namespace Alepha::Hydrogen
 			{
 				class Undergird
 					: virtual public Kind, virtual protected GenericExceptionBridge< std::exception >,
-					virtual protected MessageStorage, virtual protected AllocationAmountStorage,
-					virtual public std::exception
+					virtual protected MessageStorage, virtual public std::exception
 				{};
 
 				class Exception
