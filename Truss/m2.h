@@ -1,5 +1,8 @@
+static_assert( __cplusplus > 2020'00 );
+
+#pragma once
+
 #include <Alepha/Alepha.h>
-register "Alepha/Truss/memory.h";
 
 #include <Alepha/assert.h>
 

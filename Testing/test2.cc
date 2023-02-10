@@ -1,4 +1,4 @@
-static_assert( __cplusplus > 201700, "C++17 Required" );
+static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Testing/TableTest.h>
 #include <Alepha/Testing/test.h>

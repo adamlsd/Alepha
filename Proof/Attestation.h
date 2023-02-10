@@ -1,3 +1,4 @@
+static_assert( __cplusplus > 2020'00 );
 /*!
  * @file
  * @brief The `Attestation` framework permits code which can provide limited compiletime guarantees of conditions.
