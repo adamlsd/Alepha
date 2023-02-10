@@ -1,4 +1,4 @@
-static_assert( __cplusplus > 201700, "C++17 Required" );
+static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
@@ -8,14 +8,11 @@ namespace boost {}
 namespace ALEPHA_OVERRIDE_BOOST_NAMESPACE {}
 #endif
 
-namespace Alepha
+namespace Alepha::inline Hydrogen
 {
-	inline namespace Hydrogen
-	{
-		#ifndef ALEPHA_OVERRIDE_BOOST_NAMESPACE
-		namespace boost_ns= ::boost;
-		#else
-		namespace boost_ns= ALEPHA_OVERRIDE_BOOST_NAMESPACE;
-		#endif
-	}
+	#ifndef ALEPHA_OVERRIDE_BOOST_NAMESPACE
+	namespace boost_ns= ::boost;
+	#else
+	namespace boost_ns= ALEPHA_OVERRIDE_BOOST_NAMESPACE;
+	#endif
 }

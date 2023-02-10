@@ -1,4 +1,4 @@
-static_assert( __cplusplus > 2017, "C++17 Required" );
+static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
