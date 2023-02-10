@@ -1,0 +1,6 @@
+The Truss sub-library of Alepha unifies dependencies upon boost and STL components into a
+single tunable namespace.  Alepha::Truss::function, for example is one of `boost::function` or
+`std::function`, based upon tuning parameters.  This allows a single `XXX::function` to be
+presented in the ABI and API for Alepha.
+
+Alepha also provides a few of its own versions where conversions can make sense.
