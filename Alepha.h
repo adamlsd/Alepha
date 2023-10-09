@@ -11,8 +11,8 @@ namespace ALEPHA_OVERRIDE_BOOST_NAMESPACE {}
 namespace Alepha::inline Hydrogen
 {
 	#ifndef ALEPHA_OVERRIDE_BOOST_NAMESPACE
-	namespace boost_ns= ::boost;
+	namespace boost= ::boost;
 	#else
-	namespace boost_ns= ALEPHA_OVERRIDE_BOOST_NAMESPACE;
+	namespace boost= ALEPHA_OVERRIDE_BOOST_NAMESPACE;
 	#endif
 }
