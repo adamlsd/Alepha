@@ -2,6 +2,13 @@ static_assert( __cplusplus > 2020 );
 
 #include "word_wrap.h"
 
+#include <cassert>
+
+#include <tuple>
+#include <iostream>
+
+#include "evaluation_helpers.h"
+
 namespace Alepha::Cavorite  ::detail::  word_wrap
 {
 	namespace
@@ -16,8 +23,14 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 			{
 				if( currentLineWidth + word.size() > maximumWidth )
 				{
+					//std::cerr << "Going to newline on word: " << word << "(currentLineWidth= " << currentLineWidth << ")" << std::endl;
 					result+= '\n';
-					std::fill_n( back_inserter( result ), ' ', nextLineOffset );
+					//const auto orig= result.size();
+					std::fill_n( back_inserter( result ), nextLineOffset, ' ' );
+					//assert( orig + nextLineOffset == result.size() );
+					//std::cerr << "orig: " << orig << " nextLineOffset: " << nextLineOffset << " result: " << result.size() << std::endl;
+			
+					//result+= '%';
 					return nextLineOffset;
 				}
 				else return currentLineWidth;
@@ -32,9 +45,10 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 	std::string
 	exports::wordWrap( const std::string &text, const std::size_t width, const std::size_t nextLineOffset )
 	{
-		auto putWord= [[nodiscard]] [width, nextLineOffset]( std::string &&word, std::string &line, const std::size_t lineLength )
+		auto putWord= [width, nextLineOffset]( std::string &&word, std::string &line, const std::size_t lineLength )
 		{
-			return applyWordToLine( width, nextLineOffset, line.size(), std::move( word ), line );
+			const auto rv= applyWordToLine( width, nextLineOffset, lineLength, std::move( word ), line );
+			return rv;
 		};
 
 		std::string result;
@@ -54,7 +68,7 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 				word.clear();
 				if( lineLength < width )
 				{
-					line+= ' ';
+					result+= ' ';
 					lineLength++;
 				}
 			}

@@ -7,6 +7,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <iosfwd>
 
 #include "meta.h"
+#include "function_traits.h"
 
 namespace Alepha::inline Cavorite  ::detail::  core_concepts
 {
@@ -25,7 +26,7 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 			concept ConvertibleTo= std::convertible_to< T, U >;
 
 			template< typename T, typename Base >
-			concept DerivedFrom= std::derived_from< T, Base >
+			concept DerivedFrom= std::derived_from< T, Base >;
 
 			template< typename T >
 			concept FloatingPoint= std::floating_point< T >;
@@ -50,7 +51,7 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 		template< typename T, typename Target >
 		concept ConvertibleToButNotSameAs= true
 			and not SameAs< T, Target >
-			and ConveritbleTo< T, Target >
+			and ConvertibleTo< T, Target >
 		;
 
 
@@ -64,7 +65,7 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 
 		template< typename T >
 		concept IStreamable=
-		requires( const T &t, std::istream &os )
+		requires( const T &t, std::istream &is )
 		{
 			{ is >> t } -> SameAs< std::istream & >;
 		};
@@ -188,7 +189,7 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 		;
 
 		template< typename T >
-		concept Primitive= Floatish< T > or Intish< T >;
+		concept Primitive= FloatingPoint< T > or Integral< T >;
 
 		template< typename T >
 		concept Aggregate= std::is_aggregate_v< T >;
@@ -202,6 +203,9 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 
 		template< typename T >
 		concept NotFunctional= not Functional< T >;
+
+		template< typename T >
+		concept UnaryFunction= Functional< T > and function_traits< T >::args_size == 1;
 
 		template< typename T >
 		concept StandardLayout= std::is_standard_layout_v< T >;
@@ -237,7 +241,7 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 		;
 
 		template< typename T, typename Member >
-		concept SpecializedOn= is_specialized_on< T, Member >;
+		concept SpecializedOn= is_specialized_on_v< T, Member >;
 
 		template< typename Member, typename Seq >
 		concept SequenceOf= Sequence< Seq > and SpecializedOn< Seq, Member >;
@@ -276,4 +280,5 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 
 namespace Alepha::Cavorite::inline exports::inline core_concepts
 {
-
+	using namespace detail::core_concepts::exports;
+}

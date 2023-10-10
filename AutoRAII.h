@@ -79,6 +79,26 @@ namespace Alepha::Hydrogen
 					decltype( auto ) operator->() const { return value; }
 			};
 
+			template< typename Dtor >
+			class AutoRAII< void, Dtor > : boost::noncopyable
+			{
+				private:
+					Dtor dtor;
+
+				public:
+					~AutoRAII()
+					{
+						if constexpr( std::is_same_v< Dtor, std::function< void () > > )
+						{
+							if( dtor == nullptr ) return;
+						}
+						dtor();
+					}
+
+					template< typename Ctor >
+					explicit AutoRAII( Ctor ctor, Dtor dtor ) : dtor( std::move( dtor ) ) { ctor(); }
+			};
+
 			template< typename Ctor, typename Dtor >
 			explicit AutoRAII( Ctor ctor, Dtor ) -> AutoRAII< decltype( ctor() ), Dtor >;
 		}

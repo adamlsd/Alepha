@@ -27,7 +27,7 @@ namespace Alepha::inline Cavorite  ::detail::  type_lisp
 	namespace exports
 	{
 		template< typename Type >
-		concept TypeListType= is_type_list_v< Type >:
+		concept TypeListType= is_type_list_v< Type >;
 	}
 
 	template< typename T >

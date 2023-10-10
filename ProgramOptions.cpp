@@ -1,10 +1,14 @@
 static_assert( __cplusplus > 2020'00 );
 
-#include "Options.h"
+#include "ProgramOptions.h"
 
 #include <set>
+#include <exception>
 
-#include "algorithm.h"
+#include <Alepha/Console.h>
+#include <Alepha/word_wrap.h>
+#include <Alepha/StaticValue.h>
+#include <Alepha/error.h>
 
 namespace Alepha::Cavorite  ::detail::  program_options
 {
@@ -30,7 +34,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 		void
 		printString( const std::string &s, const std::size_t indent )
 		{
-			const std::size_t width= Console::main().getScreenWidth();
+			const std::size_t width= getConsoleWidth();
 			std::cout << wordWrap( s, width, indent ) << std::endl;
 		}
 	}
@@ -72,7 +76,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 	impl::checkArgument( const std::optional< std::string > &argument, const std::string &name )
 	{
 		if( argument.has_value() ) return;
-		throw OptionMissingArgumentError( '`' + name "` requires an argument." );
+		throw OptionMissingArgumentError( '`' + name + "` requires an argument." );
 	}
 
 	const OptionBinding &
@@ -105,7 +109,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 	}
 
 	std::ostream &
-	OptionBinding::operator << ( std::function< void ( std::optional< std::string > ) core ) const
+	OptionBinding::operator << ( std::function< void ( std::string ) > core ) const
 	{
 		// So that users do not have to implement their own checking for argument present,
 		// we do it for them.
@@ -133,7 +137,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 	namespace
 	{
 		std::string
-		buildIncompatibleHelpText( const std::string &name, const auto &domains )
+		buildIncompatibleHelpText( const std::string &name, const auto &domains, const auto &exclusivityMembers )
 		{
 			if( not domains.contains( typeid( ExclusivityDomain ) )
 					or domains.at( typeid( ExclusivityDomain ) ).empty() )
@@ -144,8 +148,8 @@ namespace Alepha::Cavorite  ::detail::  program_options
 			std::set< std::string > incompatibles;
 			for( const auto &domain: domains.at( typeid( ExclusivityDomain ) ) )
 			{
-				std::transform( mutuallyExclusiveOptions.lower_bound( domain ),
-						mutuallyExclusiveOptions.upper_bound( domain ),
+				std::transform( exclusivityMembers.lower_bound( domain ),
+						exclusivityMembers.upper_bound( domain ),
 						std::inserter( incompatibles, end( incompatibles ) ),
 						[]( const auto &item ) { return item.second; } );
 			}
@@ -167,13 +171,13 @@ namespace Alepha::Cavorite  ::detail::  program_options
 		void
 		printAllOptionsHelp( const std::optional< std::string > canonicalProgramName )
 		{
-			const auto maxOptionLength= std::max_element( begin( programOptions(), end( programOptions ),
+			const auto longestOption= std::max_element( begin( programOptions() ), end( programOptions() ),
 					[]( const auto &lhs, const auto &rhs )
 					{
 						return lhs.first.size() < rhs.first.size();
 					} );
 			// Account for the `:` and the ` ` in the output table format.
-			const std::size_t alignmentWidth= maxOptionLength + 2;
+			const std::size_t alignmentWidth= longestOption->first.size() + 2;
 
 			//
 			std::multimap< const DomainBase *, std::string > exclusivityMembers;
@@ -193,14 +197,14 @@ namespace Alepha::Cavorite  ::detail::  program_options
 			{
 				const auto &[ _, helpText, defaultBuilder, domains ]= def;
 				// How much unused of the max width there will be
-				const std::size_t padding= alignmentWidth - optionName.size() - 2;
+				const std::size_t padding= alignmentWidth - name.size() - 2;
 
 				VariableMap substitutions=
 				{
 					// This uses a GNU extension, but it's fine.  We can always make this
 					// portable, later.
 					{ "program-name"s, lambaste<=::program_invocation_short_name },
-					{ "option-name"s, lambaste<=optionName },
+					{ "option-name"s, lambaste<=name },
 					{ "default"s, [&defaultBuilder= defaultBuilder, &name= name]
 						{
 							return "Default is `" + name + defaultBuilder() + "`";
@@ -208,23 +212,24 @@ namespace Alepha::Cavorite  ::detail::  program_options
 				};
 				if( canonicalProgramName.has_value() )
 				{
-					substitutions[ "canonical-name"s ]= lambaste<=canonicalName.value();
+					substitutions[ "canonical-name"s ]= lambaste<=canonicalProgramName.value();
 				}
 
 				std::string substitutionTemplate= name + ": " + std::string( padding, ' ' )
 						+ helpText.str() + "\n";
 
 				// Append the incompatibility text, when we see mutually-exclusive options.
-				substitutionTemplate+= buildIncompatibleHelpText( name, domains );
+				substitutionTemplate+= buildIncompatibleHelpText( name, domains, exclusivityMembers );
 
 				const std::string helpString= expandVariables( substitutionTemplate, substitutions, '!' );
 				printString( helpString, alignmentWidth );
+				std::cout << std::endl;
 			}
 
 			// Check for required options, and print a summary of those:
-			if( not requiredOptions().empty() ) for( const auto &[ _, group ]: requiredOptions )
+			if( not requiredOptions().empty() ) for( const auto &[ _, group ]: requiredOptions() )
 			{
-				const std::size_t width= Console::main().getScreenWidth();
+				const std::size_t width= getConsoleWidth();
 				std::ostringstream oss;
 				oss << "At least one of the options in this group are required: ";
 				bool first= true;
@@ -232,7 +237,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 				{
 					if( not first ) oss << ", ";
 					first= false;
-					oss << '`' << required << '`':
+					oss << '`' << required << '`';
 				}
 
 				std::cout << wordWrap( oss.str(), width ) << std::endl;
@@ -244,7 +249,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 	std::ostream &
 	OptionBinding::operator << ( bool &flag ) const
 	{
-		--OptionString{ "no-" + name.substr( 2 ) };
+		--OptionString{ "no-" + name.substr( 2 ) }
 			<< [&flag] { flag= false; } << "Disable `" + name + "`.  See that option for more details.";
 		return self() << [&flag] { flag= true; };
 	}
@@ -267,7 +272,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 	}
 
 	[[noreturn]] void
-	impl::usage( const std::string &helpmessage, const std::optional< std::string > &canonicalName )
+	impl::usage( const std::string &helpMessage, const std::optional< std::string > &canonicalName )
 	{
 		if( not helpMessage.empty() )
 		{
@@ -278,11 +283,11 @@ namespace Alepha::Cavorite  ::detail::  program_options
 			};
 
 			if( canonicalName.has_value() ) substitutions[ "canonical-name"s ]= lambaste<=canonicalName.value();
-			std::cout << wordWrap( expandVariables( helpMessage, substitutions, '!' ), Console::main().getScreenWidth() )
+			std::cout << wordWrap( expandVariables( helpMessage, substitutions, '!' ), getConsoleWidth() )
 					<< std::endl << std::endl;
 		}
 
-		printOptionsHelp( canonicalName );
+		printAllOptionsHelp( canonicalName );
 		::exit( EXIT_SUCCESS );
 	}
 
@@ -331,12 +336,12 @@ namespace Alepha::Cavorite  ::detail::  program_options
 				// doing a map lookup.
 				for( const auto &[ name, def ]: opts )
 				{
-					if( C::debugMatching ) error() << "Attempting to match `" << name << "` to `" << arg << "`" << std::endl;
+					if( C::debugMatching ) error() << "Attempting to match `" << name << "` to `" << param << "`" << std::endl;
 
 					const auto &handler= def.handler;
 					std::optional< std::string > argument;
 					if( param == name ) argument= std::nullopt;
-					else if( param.starts_with( name ) and "=:"s.contains( param.at( name.size() ) ) )
+					else if( param.starts_with( name ) and "=:"s.find( param.at( name.size() ) ) != std::string::npos )
 					{
 						argument= param.substr( name.size() + 1 );
 					}
@@ -352,12 +357,12 @@ namespace Alepha::Cavorite  ::detail::  program_options
 						if( C::debugExclusions )
 						{
 							error() << "I see " << exclusions.size() << " mutual exclusions against `"
-							<< name << "`" std::endl;
+							<< name << "`" << std::endl;
 						}
 						for( const auto &exclusion: exclusions )
 						{
 							// Look up this domain, and see if something from it was used.
-							auto &other= exclusiveOptions()[ exclusion ].previousOption;
+							auto &other= mutuallyExclusiveOptions()[ exclusion ].previous;
 							if( other.has_value() and other != name )
 							{
 								throw std::runtime_error{ "Options `" + other.value() + "` and `"
@@ -380,8 +385,8 @@ namespace Alepha::Cavorite  ::detail::  program_options
 				}
 				return false;
 			};
-			if( C::debugMatching and not found ) error() << "No match for `" << param << "` was found." << std::endl;
-			if( found ) continue;
+			if( C::debugMatching and not matched ) error() << "No match for `" << param << "` was found." << std::endl;
+			if( matched ) continue;
 			rv.push_back( param );
 
 			if( param.starts_with( "--" ) )
@@ -392,8 +397,8 @@ namespace Alepha::Cavorite  ::detail::  program_options
 		}
 		catch( const OptionMissingArgumentError &e )
 		{
-			if( next == end( argsForProcessing ) or next->startsWith( "--" ) ) throw;
-			throw std::runtime_error( ex.what() + " did you mean: `"s + param + "=" + *next + "`?" );
+			if( next == end( argsToProcess ) or next->starts_with( "--" ) ) throw;
+			throw std::runtime_error( e.what() + " did you mean: `"s + param + "=" + *next + "`?" );
 		}
 
 		if( endOfArgs != end( args ) ) std::copy( endOfArgs + 1, end( args ), back_inserter( rv ) );
@@ -402,14 +407,14 @@ namespace Alepha::Cavorite  ::detail::  program_options
 
 		// If we're not doing a help-run, then we need to validate the required
 		// options were all passed.
-		if( requiredOptions.size() != requiredOptionsSeen.size() )
+		if( requiredOptions().size() != requiredOptionsSeen.size() )
 		{
 			for( auto [ required, opts ]: requiredOptions() )
 			{
 				if( requiredOptionsSeen.contains( required ) ) continue;
 
 				std::ostringstream oss;
-				oss <<< "Required option missing.  At least one of ";
+				oss << "Required option missing.  At least one of ";
 				bool first= true;
 				for( const auto &name: opts )
 				{
@@ -422,7 +427,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 				throw std::runtime_error( oss.str() );
 			}
 
-			throw std::runtime_error{ "A required option was missing, and it couldn't be identified." );
+			throw std::runtime_error{ "A required option was missing, and it couldn't be identified." };
 		}
 
 		return rv;

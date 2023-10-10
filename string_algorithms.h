@@ -6,9 +6,15 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <iostream>
 #include <functional>
+#include <algorithm>
+#include <numeric>
 #include <vector>
 #include <string>
 #include <map>
+
+#include <boost/lexical_cast.hpp>
+
+#include <Alepha/Concepts.h>
 
 namespace Alepha::inline Cavorite  ::detail::  string_algorithms
 {
@@ -18,6 +24,8 @@ namespace Alepha::inline Cavorite  ::detail::  string_algorithms
 
 	inline namespace exports
 	{
+		using VariableMap= VarMap;
+
 		/*!
 		 * Returns a new string with text-replacement variables expanded.
 		 *
@@ -39,6 +47,7 @@ namespace Alepha::inline Cavorite  ::detail::  string_algorithms
 		 */
 		std::vector< std::string > parseCommas( const std::string &text );
 
+		std::vector< std::string > split( const std::string &s, char token );
 
 		/*!
 		 * Parses an integral range description into a vector of values.
@@ -62,10 +71,11 @@ namespace Alepha::inline Cavorite  ::detail::  string_algorithms
 			std::iota( begin( rv ), end( rv ), low );
 
 			return rv;
+		}
 	}
 }
 
 namespace Alepha::Cavorite::inline exports::inline string_algorithms
 {
-	using namespace detail::exports::string_algorithms;
+	using namespace detail::string_algorithms::exports;
 }

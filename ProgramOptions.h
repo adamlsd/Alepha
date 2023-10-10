@@ -81,6 +81,17 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <string>
 #include <typeindex>
+#include <exception>
+#include <stdexcept>
+#include <optional>
+#include <vector>
+
+#include <boost/lexical_cast.hpp>
+
+#include <Alepha/Alepha.h>
+#include <Alepha/Concepts.h>
+#include <Alepha/string_algorithms.h>
+#include <Alepha/evaluation_helpers.h>
 
 namespace Alepha::inline Cavorite  ::detail::  program_options
 {
@@ -142,7 +153,7 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 
 		using RequirementDomain= Domain< requirement_tag >;
 
-		using PreHelpDoimain= Domain< pre_help_tag >;
+		using PreHelpDomain= Domain< pre_help_tag >;
 		inline const PreHelpDomain affectsHelp;
 	}
 
@@ -159,7 +170,7 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 		throw std::runtime_error( "Error parsing option `" + argName + "`, with parameter string: `" + s + "` (full option: `" + fullOption + "`)" );
 	}
 
-	namespace impl
+	inline namespace impl
 	{
 		struct ProgramOption;
 
@@ -211,7 +222,7 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 			{
 				return self() << [&list, name= name]( const std::string param )
 				{
-					for( const std:;string &datum: parseCommas( param ) )
+					for( const std::string &datum: parseCommas( param ) )
 					{
 						if constexpr( Integral< T > )
 						{
@@ -240,7 +251,7 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 
 			// Boolean flag options are a special case of the value-binding system.
 			// They generate `--no-` forms of the option as well.
-			OptionBinding operator << ( bool &flag ) const;
+			std::ostream &operator << ( bool &flag ) const;
 
 			template< NotFunctional T >
 			[[nodiscard]] std::ostream &
@@ -269,12 +280,12 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 			operator << ( UnaryFunction auto handler ) const
 			{
 				using arg_type= get_arg_t< std::decay_t< decltype( handler ) >, 0 >;
-				if constexpr( is_vector_v< arg_type > )
+				if constexpr( Vector< arg_type > )
 				{
 					// TODO: This should steal the impl from the vector form, above, and that should defer to this.
 
 					using parse_type= typename arg_type::value_type;
-					auto handler= [core, name= name]( std::optional< std::string > argument )
+					auto handler= [handler, name= name]( std::optional< std::string > argument )
 					{
 						impl::checkArgument( argument, name );
 
@@ -293,27 +304,25 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 							}
 							return rv;
 						};
-						core( parsed );
+						handler( parsed );
 					};
 					return registerHandler( handler );
 				}
 				else
 				{
-					auto handler= [core, name= name]( std::optional< std::string > argument )
+					auto wrapped= [handler, name= name]( std::optional< std::string > argument )
 					{
 						impl::checkArgument( argument, name );
 
 						const auto value= argumentFromString< arg_type >( argument.value(), name, name + "=" + argument.value() );
-						return core( value );
+						return handler( value );
 					};
-					return registerHandler( handler );
+					return registerHandler( wrapped );
 				}
 			}
 	};
 
 	void printString( const std::string &s, const std::size_t indent );
-
-	void printOptionsHelp();
 
 	struct OptionString { std::string name; };
 
@@ -324,7 +333,7 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 
 	inline namespace impl
 	{
-		[[nodiscard]] OptoinBinding operator --( OptionString option );
+		[[nodiscard]] OptionBinding operator --( OptionString option );
 	}
 
 	struct ProgramDescription
@@ -354,23 +363,23 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 		auto
 		handleOptions( const std::vector< std::string > &args )
 		{
-			return impl::handleOptions( args, usageWrap< T > );
+			return impl::handleOptions( args, usageWrap< Supplement > );
 		}
 
 		template< typename Supplement >
 		auto
 		handleOptions( const int argcnt, const char *const *const argvec )
 		{
-			return handleOptions< T >( { argvec + 1, argvec + argcnt }, usageWrap< T > );
+			return handleOptions< Supplement >( { argvec + 1, argvec + argcnt } );
 		}
 
-		auto
+		inline auto
 		handleOptions( const std::vector< std::string > &args )
 		{
 			return handleOptions< ProgramDescription >( args );
 		}
 
-		auto
+		inline auto
 		handleOptions( const int argcnt, const char *const *const argvec )
 		{
 			return handleOptions< ProgramDescription >( argcnt, argvec );

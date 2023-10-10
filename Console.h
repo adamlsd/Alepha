@@ -2,6 +2,11 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <string>
+#include <memory>
+
+#include <Alepha/TotalOrder.h>
+
 // These are some terminal/console control primitives.
 // There are several "modern" terminal assumptions built
 // into this library.
@@ -19,8 +24,6 @@ namespace Alepha::inline Cavorite  ::detail::  console
 		struct CursorPosition;
 
 		class Console;
-
-		Console &console() noexcept;
 
 		struct SGR_String
 		{
@@ -52,7 +55,7 @@ namespace Alepha::inline Cavorite  ::detail::  console
 
 		// TODO: Move this to its own library.
 		const std::string &applicationName();
-		void setApplication( std::string name );
+		void setApplicationName( std::string name );
 	}
 
 	struct exports::ScreenSize
@@ -77,13 +80,13 @@ namespace Alepha::inline Cavorite  ::detail::  console
 
 			std::ostream &csi();
 
+
 		public:
 			// A console object can only be constructed on a raw UNIX file descriptor.
 			explicit Console( int fd );
 
-			enum Mode;
-
-			Mode getMode() const;
+			static Console &main();
+			auto getMode() const;
 
 			int getScreenWidth();
 			int getScreenHeight();
@@ -142,12 +145,12 @@ namespace Alepha::inline Cavorite  ::detail::  console
 
 		[[nodiscard]] SGR_String setBlink();
 
-		[[nodiscard]] SGR_String setFGColor( BasicTextColor fg );
-		[[nodiscard]] SGR_String setBGColor( BasicTextColor bg );
+		[[nodiscard]] SGR_String setFgColor( BasicTextColor fg );
+		[[nodiscard]] SGR_String setBgColor( BasicTextColor bg );
 		[[nodiscard]] SGR_String setColor( BasicTextColor fg, BasicTextColor bg );
 
-		[[nodiscard]] SGR_String setExtFGColor( TextColor fg );
-		[[nodiscard]] SGR_String setExtBGColor( TextColor fg );
+		[[nodiscard]] SGR_String setExtFgColor( TextColor fg );
+		[[nodiscard]] SGR_String setExtBgColor( TextColor fg );
 		[[nodiscard]] SGR_String setExtColor( TextColor fg, TextColor bg );
 
 		// Basic color wrapping aliases:
@@ -159,11 +162,18 @@ namespace Alepha::inline Cavorite  ::detail::  console
 		[[nodiscard]] inline SGR_String setExtColor( const BasicTextColor fg, const BasicTextColor bg ) { return setExtColor( static_cast< TextColor >( fg ), static_cast< TextColor >( bg ) ); }
 
 		[[nodiscard]] SGR_String setFgTrueColor( int rgb );
-		[[nodiscard]] SGR_String setFgTrueColor( int r, int g, int b )
+		[[nodiscard]] SGR_String setFgTrueColor( int r, int g, int b );
 
 		[[nodiscard]] SGR_String setBgTrueColor( int rgb );
-		[[nodiscard]] SGR_String setBgTrueColor( int r, int g, int b )
+		[[nodiscard]] SGR_String setBgTrueColor( int r, int g, int b );
 
 		void sendSGR( std::ostream &os, SGR_String );
+
+		int getConsoleWidth();
 	}
+}
+
+namespace Alepha::Cavorite::inline exports::inline console
+{
+	using namespace detail::console::exports;
 }

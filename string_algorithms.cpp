@@ -5,7 +5,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <algorithm>
 #include <exception>
 
-#include "error.hpp"
+#include "error.h"
 
 namespace Alepha::Cavorite  ::detail::  string_algorithms
 {
@@ -31,7 +31,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 
 		for( const char ch: text )
 		{
-			if( mode == normal and ch == sigil )
+			if( mode == Normal and ch == sigil )
 			{
 				mode= Symbol;
 				varName.clear();
@@ -46,7 +46,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 					{
 						throw std::runtime_error( "No such variable: `" + varName + "`" );
 					}
-					if( C::debugVariableExpansion ) error() << "Expanding variable with name `" << varName << "`" << std::endl;
+					if( C::debugExpansion ) error() << "Expanding variable with name `" << varName << "`" << std::endl;
 					rv+= vars.at( varName )();
 				}
 				else rv+= sigil;
@@ -93,6 +93,24 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 		if( C::debugCommas ) error() << "Final parsed from commas: `" << next << "`" << std::endl;
 		rv.push_back( std::move( next ) );
 
+		return rv;
+	}
+
+	std::vector< std::string >
+	exports::split( const std::string &s, const char token )
+	{
+		std::vector< std::string > rv;
+		std::string next;
+		for( const char ch: s )
+		{
+			if( ch != token )
+			{
+				next+= ch;
+				continue;
+			}
+			rv.push_back( std::move( next ) );
+			next.clear();
+		}
 		return rv;
 	}
 }

@@ -11,7 +11,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Alepha.h>
 
-namespace Alepha::Hydrogen  ::detail::  constexpr_string
+namespace Alepha::Cavorite  ::detail::  constexpr_string
 {
 	namespace C
 	{
@@ -63,7 +63,7 @@ namespace Alepha::Hydrogen  ::detail::  constexpr_string
 			constexpr ConstexprString()= default;
 
 			constexpr
-			CosntexprString( const char *const s, std::size_t len )
+			ConstexprString( const char *const s, std::size_t len )
 			{
 				if( len >= C::maxSize ) throw BadConstantStringAllocationError{};
 

@@ -4,7 +4,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <tuple>
 
-#include <boost/noncoyable.hpp>
+#include <boost/noncopyable.hpp>
 
 namespace Alepha::inline Cavorite  ::detail::  static_value
 {
@@ -121,7 +121,7 @@ namespace Alepha::inline Cavorite  ::detail::  static_value
 	 * }
 	 * ```
 	 */
-	template< typename T, typename init_helper= default_init >
+	template< typename T, typename init_helper= default_init< T >  >
 	class exports::StaticValue : boost::noncopyable
 	{
 		private:
@@ -141,7 +141,7 @@ namespace Alepha::inline Cavorite  ::detail::  static_value
 				return *storage;
 			}
 
-			constexpr auto
+			constexpr decltype( auto )
 			operator() () noexcept
 			{
 				return get();

@@ -1,13 +1,25 @@
 static_assert( __cplusplus > 2020'00 );
 
-#include "console.h"
+#include "Console.h"
 
+#include <termios.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+
+#include <stack>
 #include <vector>
+#include <utility>
+#include <string>
+#include <sstream>
+#include <iostream>
 
-#include "ProgramOptions.h"
-#include "file_help.h"
+#include <ext/stdio_filebuf.h>
+
 #include "Enum.h"
+#include "ProgramOptions.h"
 #include "StaticValue.h"
+#include "string_algorithms.h"
+#include "AutoRAII.h"
 
 /*  
  * All of the terminal control code in this library uses ANSI escape sequences (https://en.wikipedia.org/wiki/ANSI_escape_code).
@@ -51,17 +63,22 @@ namespace Alepha::Cavorite  ::detail::  console
 				if( applicationName().empty() ) applicationName()= "ALEPHA";
 			};
 		}
-		void
-		exports::setApplicationName( std::string name )
-		{
-			storage::applicationName()= std::move( name );
-		}
-		const std::string &
-		exports::applicationName()
-		{
-			return storage::applicationName();
-		}
+	}
 
+	void
+	exports::setApplicationName( std::string name )
+	{
+		storage::applicationName()= std::move( name );
+	}
+
+	const std::string &
+	exports::applicationName()
+	{
+		return storage::applicationName();
+	}
+
+	namespace
+	{
 		auto screenWidthEnv() { return applicationName() + "_SCREEN_WIDTH"; }
 		auto screenWidthEnvLimit() { return applicationName() + "_SCREEN_WIDTH_LIMIT"; }
 		auto disableColorsEnv() { return applicationName() + "_DISABLE_COLOR_TEXT"; }
@@ -74,7 +91,7 @@ namespace Alepha::Cavorite  ::detail::  console
 			if( getenv( env.c_str() ) )
 			try
 			{
-				return boost::lexical_cast< int >( getenv( env.v_str() ) );
+				return boost::lexical_cast< int >( getenv( env.c_str() ) );
 			}
 			catch( const boost::bad_lexical_cast & ) {}
 			return d;
@@ -82,7 +99,7 @@ namespace Alepha::Cavorite  ::detail::  console
 
 		int cachedScreenWidth= evaluate <=[]
 		{
-			const int underlying getEnvOrDefault( screenWidthEnv(), getScreenSize().columns );
+			const int underlying= getEnvOrDefault( screenWidthEnv(), Console::main().getScreenSize().columns );
 			return std::min( underlying, getEnvOrDefault( screenWidthEnvLimit(), C::defaultScreenWidthLimit ) );
 		};
 
@@ -92,11 +109,11 @@ namespace Alepha::Cavorite  ::detail::  console
 		bool
 		colorEnabled()
 		{
-			if( not colorState.has_value() ) return getenv( disableColorsEnv() );
+			if( not colorState.has_value() ) return getenv( disableColorsEnv().c_str() );
 
-			if( colorState == "never"_value ) return false;
-			if( colorState == "always"_value ) return true;
-			assert( colorState == "auto"_value );
+			if( colorState.value() == "never"_value ) return false;
+			if( colorState.value() == "always"_value ) return true;
+			assert( colorState.value() == "auto"_value );
 
 			return ::isatty( 1 ); // Auto means only do this for TTYs.
 		}
@@ -113,7 +130,7 @@ namespace Alepha::Cavorite  ::detail::  console
 			{
 				for( const auto [ name, sgr ]: colorVariables() )
 				{
-					std::cout << name.name << ": ^[[": << sgr.code << "m" << std::endl;
+					std::cout << name.name << ": ^[[" << sgr.code << "m" << std::endl;
 				}
 			}
 			<< "Emit a list with the color variables supported by this application.  For use with the `" << colorsEnv()
@@ -122,6 +139,7 @@ namespace Alepha::Cavorite  ::detail::  console
 			--"dump-color-env-var"_option << []
 			{
 				std::cout << "export " << colorsEnv() << "-\"";
+				bool first= true;
 				for( const auto &[ name, sgr ]: colorVariables() )
 				{
 					if( not first ) std::cout << ":";
@@ -135,11 +153,11 @@ namespace Alepha::Cavorite  ::detail::  console
 			<< "application.";
 
 		parse_environment_variable_for_color:
-			if( getenv( colorsEnv() ) )
+			if( getenv( colorsEnv().c_str() ) )
 			{
-				const std::string contents= getenv( colorsEnv() );
+				const std::string contents= getenv( colorsEnv().c_str() );
 
-				for( const auto var: split( varString, ':' ) )
+				for( const auto var: split( contents, ':' ) )
 				{
 					const auto parsed= split( var, '=' );
 					if( parsed.size() != 2 )
@@ -199,10 +217,35 @@ namespace Alepha::Cavorite  ::detail::  console
 		return os;
 	}
 
-	enum exports::Console::Mode
+
+	enum ConsoleMode
 	{
 		cooked, raw, noblock,
 	};
+
+
+	struct Console::Impl
+	{
+		int fd;
+		// TODO: Do we want to make this not gnu libstdc++ specific?
+		__gnu_cxx::stdio_filebuf< char > filebuf;
+		std::ostream stream;
+		std::stack< std::pair< struct termios, ConsoleMode > > modeStack;
+		ConsoleMode mode= cooked;
+		std::optional< int > cachedScreenWidth;
+
+		explicit
+		Impl( const int fd )
+			: fd( fd ), filebuf( fd, std::ios::out ), stream( &filebuf )
+		{}
+	};
+
+	auto
+	Console::getMode() const
+	{
+		return pimpl().mode;
+	}
+
 
 	namespace
 	{
@@ -212,15 +255,15 @@ namespace Alepha::Cavorite  ::detail::  console
 			BadScreenStateError() : std::runtime_error( "Error in getting terminal dimensions." ) {}
 		};
 
-		struct UnknowScreenError : std::runtime_error
+		struct UnknownScreenError : std::runtime_error
 		{
-			UnknowScreenError() : std::runtime_error( "Terminal is unrecognized.  Using defaults." ) {}
+			UnknownScreenError() : std::runtime_error( "Terminal is unrecognized.  Using defaults." ) {}
 		};
 
 		auto
 		rawModeGuard( Console console )
 		{
-			const bool skip= console.getMode() == Console::raw;
+			const bool skip= console.getMode() == ConsoleMode::raw;
 			return AutoRAII
 			{
 				[skip, &console]
@@ -236,21 +279,7 @@ namespace Alepha::Cavorite  ::detail::  console
 			};
 		}
 	}
-
-	struct Console::Impl
-	{
-		int fd;
-		// TODO: Do we want to make this not gnu libstdc++ specific?
-		__gnu_cxx::stdio_filebuf< char > filebuf;
-		std::ostream stream;
-		std::stack< std::pair< struct termios, decltype( mode ) > > modeStack;
-		ConsoleMode mode= cooked;
-
-		explicit
-		Impl( const int fd )
-			: fd( fd ), filebuf( fd, std::ios::out ), stream( &filebuf )
-		{}
-	};
+	
 
 	Console::Console( const int fd )
 		: impl( std::make_unique< Impl >( fd ) )
@@ -261,19 +290,12 @@ namespace Alepha::Cavorite  ::detail::  console
 	{
 		return pimpl().stream;
 	}
-	
-
-	Console::Mode
-	Console::getMode() const
-	{
-		return pimpl().mode;
-	}
 
 	void
 	Console::popTermMode()
 	{
 		tcsetattr( pimpl().fd, TCSAFLUSH, &pimpl().modeStack.top().first );
-		mode= pimpl().modeStack.top().second;
+		pimpl().mode= pimpl().modeStack.top().second;
 		pimpl().modeStack.pop();
 	}
 
@@ -289,12 +311,12 @@ namespace Alepha::Cavorite  ::detail::  console
 
 			next.c_iflag&= ~( BRKINT | ICRNL | INPCK | ISTRIP | IXON );
 			next.c_oflag&= ~( OPOST );
-			next.c_flag|= CS8;
-			next.c_lflag&= !( ECHO | ICANNON | IEXTEN | ISIG );
+			next.c_cflag|= CS8;
+			next.c_lflag&= !( ECHO | ICANON | IEXTEN | ISIG );
 			next.c_cc[ VMIN ]= min;
 			next.c_cc[ VTIME ]= 0;
 
-			if( tcsetattr( pimpl().fd, TCSAFLUSH, &next ) ) throw UnknownScreenException{};
+			if( tcsetattr( fd, TCSAFLUSH, &next ) ) throw UnknownScreenError{};
 
 			return now;
 		}
@@ -303,17 +325,17 @@ namespace Alepha::Cavorite  ::detail::  console
 	void
 	Console::setRaw()
 	{
-		setRawModeWithMin( pimpl().fd, 1 );
-		orig.emplace_back( now, mode );
-		mode= raw;
+		const auto old= setRawModeWithMin( pimpl().fd, 1 );
+		pimpl().modeStack.emplace( old, pimpl().mode );
+		pimpl().mode= raw;
 	}
 
 	void
 	Console::setNoblock()
 	{
-		setRawModeWithMin( pimpl().fd, 0 );
-		orig.emplace_back( now, mode );
-		mode= raw;
+		const auto old= setRawModeWithMin( pimpl().fd, 0 );
+		pimpl().modeStack.emplace( old, pimpl().mode );
+		pimpl().mode= raw;
 	}
 
 	void Console::killLineTail() { csi() << 'K'; }
@@ -329,7 +351,7 @@ namespace Alepha::Cavorite  ::detail::  console
 	void Console::gotoX( const int x ) { csi() << x << 'G'; }
 
 	void
-	Console::gotoY( const int x )
+	Console::gotoY( const int y )
 	{
 		cursorUp( 1'000'000 );
 		cursorDown( y );
@@ -349,7 +371,7 @@ namespace Alepha::Cavorite  ::detail::  console
 	SGR_String exports::setBlink() { return { "5" }; }
 
 	SGR_String
-	exports::setFGColor( const BasicTextColor c )
+	exports::setFgColor( const BasicTextColor c )
 	{
 		std::ostringstream oss;
 		oss << '3' << int( c );
@@ -357,7 +379,7 @@ namespace Alepha::Cavorite  ::detail::  console
 	}
 
 	SGR_String
-	exports::setBGColor( const BasicTextColor c )
+	exports::setBgColor( const BasicTextColor c )
 	{
 		std::ostringstream oss;
 		oss << '4' << int( c );
@@ -368,7 +390,7 @@ namespace Alepha::Cavorite  ::detail::  console
 	exports::setColor( const BasicTextColor fg, const BasicTextColor bg )
 	{
 		std::ostringstream oss;
-		oss << '3' << fg << ";4" << int( bg );
+		oss << '3' << int( fg ) << ";4" << int( bg );
 		return { std::move( oss ).str() };
 	}
 
@@ -393,7 +415,54 @@ namespace Alepha::Cavorite  ::detail::  console
 	exports::setExtColor( const TextColor fg, const TextColor bg )
 	{
 		std::ostringstream oss;
-		oss << "38;2" << fg << "48;2" << int( bg );
+		oss << "38;2" << int( fg ) << "48;2" << int( bg );
 		return { std::move( oss ).str() };
+	}
+
+	int
+	exports::getConsoleWidth()
+	{
+		return cachedScreenWidth;
+	}
+
+	int
+	Console::getScreenWidth()
+	{
+		if( not pimpl().cachedScreenWidth.has_value() )
+		{
+			pimpl().cachedScreenWidth= getScreenSize().columns;
+		}
+
+		return pimpl().cachedScreenWidth.value();
+	}
+
+	ScreenSize
+	Console::getScreenSize()
+	try
+	{
+		if( not isatty( pimpl().fd )  ) throw UnknownScreenError{};
+
+		// Use the `ioctl( TIOCGWINSZ )`, but we'll just defer to 24x80 if we fail that...
+		struct winsize ws;
+		const int ec= ioctl( pimpl().fd, TIOCGWINSZ, &ws );
+		if( ec == -1 or ws.ws_col == 0 ) throw UnknownScreenError{};
+
+		return { ws.ws_row, ws.ws_col };
+	}
+	catch( const UnknownScreenError & ) { return { 24, 80 }; } // Fallback position....
+
+	namespace
+	{
+		namespace storage
+		{
+			std::unique_ptr< Console > console;
+		}
+	}
+
+	Console &
+	Console::main()
+	{
+		if( not storage::console ) storage::console= std::make_unique< Console >( 1 ); // stdout
+		return *storage::console;
 	}
 }
