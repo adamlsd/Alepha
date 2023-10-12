@@ -18,6 +18,7 @@ link_libraries( alepha )
 
 # The subdirs to build
 add_subdirectory( Meta )
+add_subdirectory( Proof )
 add_subdirectory( Reflection )
 
 # The local subdir tests to build
