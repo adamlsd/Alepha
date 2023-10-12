@@ -20,6 +20,7 @@ link_libraries( alepha )
 add_subdirectory( Meta )
 add_subdirectory( Proof )
 add_subdirectory( Reflection )
+add_subdirectory( Testing )
 
 # The local subdir tests to build
 add_subdirectory( AutoRAII.test )
