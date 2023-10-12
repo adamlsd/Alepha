@@ -114,7 +114,7 @@ namespace
 
 		"meta.streams"_test <=[]
 		{
-			static_assert( Alepha::Meta::is_streamable_v< int > );
+			static_assert(     Alepha::Meta::is_streamable_v< int > );
 			static_assert( not Alepha::Meta::is_streamable_v< void > );
 		};
 	};
@@ -134,9 +134,9 @@ namespace
 		return false;
 	}
 
-	static_assert( containsChar( begin( my_list ), end( my_list ), type_value< char >{} ) );
+	static_assert(     containsChar( begin( my_list ), end( my_list ), type_value< char >{} ) );
 	static_assert( not containsChar( begin( my_list ), end( my_list ), type_value< long double >{} ) );
-	static_assert( containsChar( begin( my_list ), end( my_list ), type_value< int >{} ) );
+	static_assert(     containsChar( begin( my_list ), end( my_list ), type_value< int >{} ) );
 }
 
 
