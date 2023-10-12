@@ -32,7 +32,7 @@ namespace Alepha::Hydrogen::Testing
 			const bool debugTestRegistration= false or C::debug;
 			const bool debugTestRun= false or C::debug;
 
-			using namespace Alepha::exports::C;
+			using namespace Alepha::Hydrogen::exports::C;
 		}
 
 		using namespace std::literals::string_literals;
@@ -226,5 +226,10 @@ namespace Alepha::Hydrogen::Testing
 	namespace exports::testing
 	{
 		using namespace detail::testing::exports;
+	}
+
+	namespace exports::inline literals::inline program_option_literals
+	{
+		using namespace detail::testing::exports::literals;
 	}
 }

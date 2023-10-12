@@ -34,7 +34,7 @@ namespace Alepha::Hydrogen::Testing
 		{
 			const bool debug= false;
 			const bool debugCaseTypes= false or C::debug;
-			using namespace Alepha::exports::console::C;
+			using namespace Alepha::console::C;
 		}
 
 		using namespace Utility::exports::evaluation;
