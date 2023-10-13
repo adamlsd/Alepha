@@ -4,8 +4,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Alepha.h>
 
-#include <Alepha/meta/is_pair.h>
-#include <Alepha/meta/is_tuple.h>
+#include <Alepha/Meta/is_pair.h>
+#include <Alepha/Meta/is_tuple.h>
 
 namespace Alepha::Hydrogen::Meta
 {

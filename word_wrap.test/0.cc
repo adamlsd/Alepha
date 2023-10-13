@@ -24,21 +24,21 @@ static auto init= Alepha::Utility::enroll <=[]
 		{ "Simple", { "Hello", 100, 0 }, "Hello" },
 		{ "space should be kept", { "Hello ", 10, 0 }, "Hello " },
 		{ "space should be dropped", { "Hello ", 5, 0 }, "Hello" },
-		{ "all spaces should be dropped", { "Hello	", 5, 0 }, "Hello" },
-		{ "two spaces should be kept", { "Hello	", 7, 0 }, "Hello  " },
+		{ "all spaces should be dropped", { "Hello  ", 5, 0 }, "Hello" },
+		{ "two spaces should be kept", { "Hello    ", 7, 0 }, "Hello  " },
 		{ "too narrow, forces wrap anyway", { "Hello", 4, 0 }, "\nHello" },
 		{ "too narrow, forces wrap anyway, drops space", { "Hello ", 4, 0 }, "\nHello" },
-		{ "too narrow, forces wrap anyway, drops spaces", { "Hello	", 4, 0 }, "\nHello" },
+		{ "too narrow, forces wrap anyway, drops spaces", { "Hello    ", 4, 0 }, "\nHello" },
 	};
 
 	const std::string helloWorld= "Hello World";
 	"word_wrap.noindent.two_words"_test <=TableTest< Alepha::wordWrap >::Cases
 	{
 		{ "Simple", { helloWorld, 100, 0 }, helloWorld },
-		{ "Trailing space should be kept", { helloWorld +" ", 100, 0 }, helloWorld + " " },
-		{ "Trailing spaces should be kept", { helloWorld + "	 ", 100, 0 }, helloWorld + "	 " },
-		{ "Trailing spaces should be dropped", { helloWorld + "	   ", helloWorld.size(), 0 }, helloWorld },
-		{ "All but 2 trailing spaces dropped", { helloWorld + "	   ", helloWorld.size() + 2, 0 },
+		{ "Trailing space should be kept", { helloWorld + " ", 100, 0 }, helloWorld + " " },
+		{ "Trailing spaces should be kept", { helloWorld + "     ", 100, 0 }, helloWorld + "     " },
+		{ "Trailing spaces should be dropped", { helloWorld + "       ", helloWorld.size(), 0 }, helloWorld },
+		{ "All but 2 trailing spaces dropped", { helloWorld + "       ", helloWorld.size() + 2, 0 },
 				helloWorld + "  "},
 
 		{ "Split line", { helloWorld, 8, 0 }, "Hello \nWorld" }, // TODO: Should we swallow trailing spaces?
@@ -117,8 +117,8 @@ static auto init= Alepha::Utility::enroll <=[]
 	"word_wrap.indent"_test <=TableTest< Alepha::wordWrap >::Cases
 	{
 		{ "Two word indent, simple", { "Hello World!", 8, 2 }, "Hello \n  World!" },
-		{ "Three word indent, simple", { "Hello Wonderful World!", 16, 4 }, "Hello Wonderful \n	World!" },
-		{ "Three word indent, corner case", { "Hello Wonderful World!", 15, 4 }, "Hello Wonderful\n	World!" },
+		{ "Three word indent, simple", { "Hello Wonderful World!", 16, 4 }, "Hello Wonderful \n    World!" },
+		{ "Three word indent, corner case", { "Hello Wonderful World!", 15, 4 }, "Hello Wonderful\n    World!" },
 		{ "Two word indent, extra newline", { "Hello\n\nWorld!", 8, 2 }, "Hello\n  \n  World!" },
 		{ "Two word indent, one newline", { "Hello\nWorld!", 8, 2 }, "Hello\n  World!" },
 	};

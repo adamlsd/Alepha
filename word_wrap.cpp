@@ -23,14 +23,8 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 			{
 				if( currentLineWidth + word.size() > maximumWidth )
 				{
-					//std::cerr << "Going to newline on word: " << word << "(currentLineWidth= " << currentLineWidth << ")" << std::endl;
 					result+= '\n';
-					//const auto orig= result.size();
 					std::fill_n( back_inserter( result ), nextLineOffset, ' ' );
-					//assert( orig + nextLineOffset == result.size() );
-					//std::cerr << "orig: " << orig << " nextLineOffset: " << nextLineOffset << " result: " << result.size() << std::endl;
-			
-					//result+= '%';
 					return nextLineOffset;
 				}
 				else return currentLineWidth;
@@ -58,9 +52,17 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 		{
 			if( ch == '\n' )
 			{
-				std::ignore= putWord( std::move( word ), result, lineLength );
+				const auto prev= lineLength;
+				const auto size= word.size();
+				lineLength= putWord( std::move( word ), result, lineLength );
 				word.clear();
-				lineLength= 0;
+				result+= '\n';
+				if( lineLength == prev + size )
+				{
+					std::fill_n( back_inserter( result ), nextLineOffset, ' ' );
+					lineLength= nextLineOffset;
+				}
+				else lineLength= 0;
 			}
 			else if( ch == ' ' )
 			{

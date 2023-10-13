@@ -8,8 +8,8 @@ static_assert( __cplusplus > 2020'00 );
 
 namespace
 {
-	using Alepha::exports::types::argcnt_t;
-	using Alepha::exports::types::argvec_t;
+	using Alepha::Hydrogen::exports::types::argcnt_t;
+	using Alepha::Hydrogen::exports::types::argvec_t;
 }
 
 int
@@ -21,8 +21,8 @@ main( const argcnt_t argcnt, const argvec_t argvec )
 namespace
 {
 	using namespace Alepha::Testing::exports;
-	using namespace Alepha::exports::comparisons;
-	using namespace Alepha::exports::capabilities;
+	using namespace Alepha::Hydrogen::exports::comparisons;
+	using namespace Alepha::Hydrogen::exports::capabilities;
 
 	template
 	<
@@ -41,7 +41,7 @@ namespace
 	};
 
 	using Date= Date_core<>;
-	namespace detail= Alepha::detail::capabilities;
+	namespace detail= Alepha::Hydrogen::detail::capabilities;
 
 	namespace Meta= Alepha::Meta;
 

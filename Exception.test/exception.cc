@@ -10,8 +10,8 @@ static_assert( __cplusplus > 2020'00 );
 
 namespace
 {
-	using Alepha::exports::types::argcnt_t;
-	using Alepha::exports::types::argvec_t;
+	using Alepha::Hydrogen::exports::types::argcnt_t;
+	using Alepha::Hydrogen::exports::types::argvec_t;
 }
 
 int
