@@ -9,6 +9,8 @@
 
 #include <random>
 
+#include <iostream>
+
 namespace
 {
 	struct Tester;
@@ -154,9 +156,22 @@ main()
 	Sorted::Witness< const std::vector< int > & > sortedVector= Sorter::sort( v );
 	assert( std::is_sorted( begin( testify( sortedVector ) ), end( testify( sortedVector ) ) ) );
 
-	std::shuffle( begin( v ), end( v ), std::random_device() );
 
-	assert( !std::is_sorted( begin( testify( sortedVector ) ), end( testify( sortedVector ) ) ) );
+	// Since this is probability driven, and there's only 5 members, there's some chance that it
+	// might actually be sorted!  Bogosort is a thing, after all.
+	//
+	// So instead, I just shuffle until it _isn't_ sorted.  Should only repeat once, almost
+	// all the time.
+	while( std::is_sorted( begin( testify( sortedVector ) ), end( testify( sortedVector ) ) ) )
+	{
+		std::shuffle( begin( v ), end( v ), std::random_device() );
+	}
+
+	if( std::is_sorted( begin( testify( sortedVector ) ), end( testify( sortedVector ) ) ) )
+	{
+		std::cerr << "They were sorted!  They shouldn't be!!" << std::endl;
+		assert( !std::is_sorted( begin( testify( sortedVector ) ), end( testify( sortedVector ) ) ) );
+	}
 
 
 	std::mutex mtx;
