@@ -195,6 +195,7 @@ namespace Alepha::Hydrogen::Testing
 
 					if( explicitlyNamed( name ) or not disabled and selected( name ) )
 					{
+						std::cout << C::green << "BEGIN  " << C::normal << ": " << name << std::endl;
 						test();
 						std::cout << C::green << "SUCCESS" << C::normal << ": " << name << std::endl;
 					}
