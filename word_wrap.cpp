@@ -8,6 +8,7 @@ static_assert( __cplusplus > 2020 );
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <memory>
 
 #include "evaluation_helpers.h"
 
@@ -36,6 +37,41 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 			result << std::move( word );
 			return rv;
 		}
+
+		struct WordWrapStreambuf
+			: public std::streambuf
+		{
+			public:
+				std::unique_ptr< std::streambuf > ownership;
+				std::streambuf *underlying= nullptr;
+
+				std::size_t maximumWidth= 0;
+				std::size_t nextLineOffset= 0;
+				std::size_t currentLineLength= 0;
+
+				std::string currentWord;
+
+				void writeChar( const char ch );
+
+				void drain();
+
+			public:
+				int
+				overflow( const int ch ) override
+				{
+					if( ch == EOF ) throw std::logic_error( "EOF!" );
+					writeChar( ch );
+
+					return 1;
+				}
+
+				std::streamsize
+				xsputn( const char *const data, const std::streamsize amt ) override
+				{
+					for( std::streamsize i= 0; i< amt; ++i ) overflow( data[ i ] );
+					return amt;
+				}
+		};
 	}
 
 	void
@@ -80,62 +116,69 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 	std::string
 	exports::wordWrap( const std::string &text, const std::size_t width, const std::size_t nextLineOffset )
 	{
-		#if NEVER
-		auto putWord= [width, nextLineOffset]( std::string &&word, std::string &line, const std::size_t lineLength )
-		{
-			std::ostringstream out;
-			const auto rv= applyWordToLine( width, nextLineOffset, lineLength, std::move( word ), out );
-			line+= std::move( out ).str();
-			return rv;
-		};
-
-		std::string result;
-		std::string word;
-		std::size_t lineLength= 0;
-		for( const char ch: text )
-		{
-			if( ch == '\n' )
-			{
-				const auto prev= lineLength;
-				const auto size= word.size();
-				lineLength= putWord( std::move( word ), result, lineLength );
-				word.clear();
-				result+= '\n';
-				if( lineLength == prev + size )
-				{
-					std::fill_n( back_inserter( result ), nextLineOffset, ' ' );
-					lineLength= nextLineOffset;
-				}
-				else lineLength= 0;
-			}
-			else if( ch == ' ' )
-			{
-				lineLength= putWord( std::move( word ), result, lineLength );
-				word.clear();
-				if( lineLength < width )
-				{
-					result+= ' ';
-					lineLength++;
-				}
-			}
-			else word+= ch;
-		}
-		if( not word.empty() ) std::ignore= putWord( std::move( word ), result, lineLength );
-		return result;
-		#else
 		std::ostringstream oss;
 
-		WordWrapStreambuf buf;
-		buf.maximumWidth= width;
-		buf.nextLineOffset= nextLineOffset;
-		buf.underlying= static_cast< std::ostream & >( oss ).rdbuf();
-		static_cast< std::ostream & >( oss ).rdbuf( &buf );
-
+		oss << StartWrap{ width, nextLineOffset };
 		oss << text;
-		buf.drain();
+		oss << EndWrap;
 
 		auto rv= std::move( oss ).str();
 		return rv;
-		#endif
+	}
+
+	namespace
+	{
+		const auto wrapperIndex= std::ios_base::xalloc();
+
+		void
+		releaseWrapper( std::ios_base &ios )
+		{
+			auto *const streambuf= static_cast< WordWrapStreambuf * >( ios.pword( wrapperIndex ) );
+			streambuf->drain();
+			delete streambuf;
+			ios.pword( wrapperIndex )= nullptr;
+		}
+
+		void
+		wordwrapCallback( const std::ios_base::event event, std::ios_base &ios, const int idx ) noexcept
+		{
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wterminate"
+
+			if( wrapperIndex != idx ) throw std::logic_error( "Must only work with the word wrap index." );
+
+			if( not ios.pword( wrapperIndex ) ) return;
+
+			if( event == std::ios_base::erase_event ) releaseWrapper( ios );
+			else if( event == std::ios_base::imbue_event ) {}
+			else if( event == std::ios_base::copyfmt_event ) throw std::runtime_error{ "Can't copy?" };
+
+			#pragma GCC diagnostic pop
+		}
+	}
+
+	std::ostream &
+	impl::operator << ( std::ostream &os, EndWrap_t )
+	{
+		releaseWrapper( os );
+		return os;
+	}
+
+	std::ostream &
+	impl::operator << ( std::ostream &os, StartWrap args )
+	{
+		auto buf= std::make_unique< WordWrapStreambuf >();
+		buf->maximumWidth= args.width;
+		buf->nextLineOffset= args.nextLineOffset;
+		buf->underlying= os.rdbuf( buf.get() );
+		auto &state= os.iword( wrapperIndex );
+		if( not state )
+		{
+			state= 1;
+			os.register_callback( wordwrapCallback, wrapperIndex );
+		}
+		os.pword( wrapperIndex )= buf.release();
+
+		return os;
 	}
 }

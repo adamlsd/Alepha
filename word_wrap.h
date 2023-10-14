@@ -13,42 +13,22 @@ namespace Alepha::inline Cavorite  ::detail::  word_wrap
 	{
 		std::string wordWrap( const std::string &text, std::size_t width, std::size_t nextLineOffset= 0 );
 
-		class WordWrapStreambuf;
+		struct StartWrap
+		{
+			std::size_t width;
+			std::size_t nextLineOffset;
+			
+			explicit StartWrap( const std::size_t width, const std::size_t nextLineOffset= 0 ) : width( width ), nextLineOffset( nextLineOffset ) {}
+		};
+
+		constexpr struct EndWrap_t {} EndWrap;
 	}
 
-	class exports::WordWrapStreambuf
-		: public std::streambuf
+	inline namespace impl
 	{
-		public:
-			std::streambuf *underlying= nullptr;
-
-			std::size_t maximumWidth= 0;
-			std::size_t nextLineOffset= 0;
-			std::size_t currentLineLength= 0;
-
-			std::string currentWord;
-
-			void writeChar( const char ch );
-
-			void drain();
-
-		public:
-			int
-			overflow( const int ch ) override
-			{
-				if( ch == EOF ) throw std::logic_error( "EOF!" );
-				writeChar( ch );
-
-				return 1;
-			}
-
-			std::streamsize
-			xsputn( const char *const data, const std::streamsize amt ) override
-			{
-				for( std::streamsize i= 0; i< amt; ++i ) overflow( data[ i ] );
-				return amt;
-			}
-	};
+		std::ostream &operator << ( std::ostream &, StartWrap );
+		std::ostream &operator << ( std::ostream &, EndWrap_t );
+	}
 }
 
 namespace Alepha::Cavorite::inline exports::inline word_wrap
