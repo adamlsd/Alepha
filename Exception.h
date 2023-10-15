@@ -36,7 +36,7 @@ namespace Alepha::Hydrogen
 		 *    This exception can be thrown as part of normal program operation -- it is a control
 		 *    flow device.
 		 *
-		 *  * `Notification`: When a thread is cancelled using interrupts, all `Exception`s thrown
+		 *  * `Notification`: When a thread is interrupted as a notification, all `Exception`s thrown
 		 *    to do so are derived from this type.  Alepha threads are setup to catch and discard
 		 *    `Exception`s of this grade in the thread start function.  It is legal to catch `Exception`s
 		 *    of this type type and silence it; however, `Notification` typically means that the
@@ -65,7 +65,8 @@ namespace Alepha::Hydrogen
 		 *    state corruption.  A program probably SHOULD ignore these and allow a core dump to
 		 *    be emitted.  An example of this might be: Runtime detection of dereference of a
 		 *    raw pointer set to `nullptr`.  This would typically indicate some kind of program
-		 *    bug.  `Violation::~Violation` is setup to call `abort()` when called.
+		 *    bug.  `Violation::~Violation` is setup to call `abort()` when called.  In some sense
+		 *    this type is what `std::logic_error` is often used to represent.
 		 */
 
 		template< typename ... Bases >
