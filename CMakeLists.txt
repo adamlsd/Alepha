@@ -27,6 +27,7 @@ add_subdirectory( AutoRAII.test )
 add_subdirectory( comparisons.test )
 add_subdirectory( Exception.test )
 add_subdirectory( word_wrap.test )
+add_subdirectory( string_algorithms.test )
 
 # Sample applications
 add_executable( example example.cc )
