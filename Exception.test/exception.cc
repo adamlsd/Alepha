@@ -33,11 +33,17 @@ namespace
 	{
 		try
 		{
-			auto exc= Alepha::build_exception< Alepha::TaggedAllocationException< struct tag > >( "This is my allocation exception" );
-			static_assert( std::is_same_v< decltype( exc )::grade_type, Alepha::Exception > );
+			auto exc= Alepha::build_exception< Alepha::TaggedAllocationError< struct tag > >( "This is my allocation exception" );
+			static_assert( std::is_same_v< decltype( exc )::grade_type, Alepha::Error > );
+
 			static_assert( std::is_same_v< Alepha::AnyTaggedException::grade_type, Alepha::Exception > );
+
 			static_assert( std::is_same_v< typename Alepha::TaggedException< struct bob >::grade_type, Alepha::Exception > );
-			static_assert( std::is_same_v< typename Alepha::TaggedThrowable< struct bob >::grade_type, Alepha::Throwable > );
+
+			static_assert( std::is_same_v< typename Alepha::TaggedCondition< struct bob >::grade_type, Alepha::Condition > );
+			static_assert( std::is_same_v< typename Alepha::TaggedNotification< struct bob >::grade_type, Alepha::Notification > );
+			static_assert( std::is_same_v< typename Alepha::TaggedError< struct bob >::grade_type, Alepha::Error > );
+			static_assert( std::is_same_v< typename Alepha::TaggedCriticalError< struct bob >::grade_type, Alepha::CriticalError > );
 			static_assert( std::is_same_v< typename Alepha::TaggedViolation< struct bob >::grade_type, Alepha::Violation > );
 			throw exc;
 		}
@@ -48,7 +54,7 @@ namespace
 			else std::cout << ex.message();
 			std::cout << std::endl;
 
-			if constexpr( std::is_base_of_v< Alepha::AnyTaggedThrowable, CatchException > )
+			if constexpr( std::is_base_of_v< Alepha::AnyTaggedException, CatchException > )
 			{
 				std::cout << "Tag type:       `" << boost::core::demangle( ex.tag().name() ) << '`' << std::endl;
 			}
@@ -73,33 +79,33 @@ namespace
 		"smoke"_test <=[] () -> bool
 		{
 			testException< std::bad_alloc >();
-			testException< Alepha::TaggedException< tag > >();
-			testException< Alepha::AnyTaggedException >();
+			testException< Alepha::TaggedError< tag > >();
+			testException< Alepha::AnyTaggedError >();
 			testException< std::exception >();
 			testException< Alepha::Exception >();
-			testException< Alepha::Throwable >();
+			testException< Alepha::Error >();
 
 			return true;
 		};
 
-		"catch.std::bad_alloc"_test <=catchable< Alepha::TaggedAllocationException< tag >, std::bad_alloc >;
-		"catch.std::exception"_test <=catchable< Alepha::TaggedAllocationException< tag >, std::exception >;
-		"catch.Alepha::Throwable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::Throwable >;
-		"catch.Alepha::AnyTaggedThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedThrowable >;
-		"catch.Alepha::TaggedThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedThrowable< tag > >;
-		"catch.Alepha::Exception"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::Exception >;
-		"catch.Alepha::AnyTaggedException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedException >;
-		"catch.Alepha::TaggedException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedException< tag > >;
-		"catch.Alepha::AllocationThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AllocationThrowable >;
-		"catch.Alepha::AnyTaggedAllocationThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedAllocationThrowable >;
-		"catch.Alepha::TaggedAllocationThrowable"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedAllocationThrowable< tag > >;
-		"catch.Alepha::AllocationException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AllocationException >;
-		"catch.Alepha::AnyTaggedAllocationException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::AnyTaggedAllocationException >;
-		"catch.Alepha::TaggedAllocationException"_test <=catchable< Alepha::TaggedAllocationException< tag >, Alepha::TaggedAllocationException< tag > >;
+		"catch.std::bad_alloc"_test <=catchable< Alepha::TaggedAllocationError< tag >, std::bad_alloc >;
+		"catch.std::exception"_test <=catchable< Alepha::TaggedAllocationError< tag >, std::exception >;
+		"catch.Alepha::Exception"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::Exception >;
+		"catch.Alepha::AnyTaggedException"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::AnyTaggedException >;
+		"catch.Alepha::TaggedException"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::TaggedException< tag > >;
+		"catch.Alepha::Error"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::Error >;
+		"catch.Alepha::AnyTaggedError"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::AnyTaggedError >;
+		"catch.Alepha::TaggedError"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::TaggedError< tag > >;
+		"catch.Alepha::AllocationException"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::AllocationException >;
+		"catch.Alepha::AnyTaggedAllocationException"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::AnyTaggedAllocationException >;
+		"catch.Alepha::TaggedAllocationException"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::TaggedAllocationException< tag > >;
+		"catch.Alepha::AllocationError"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::AllocationError >;
+		"catch.Alepha::AnyTaggedAllocationError"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::AnyTaggedAllocationError >;
+		"catch.Alepha::TaggedAllocationError"_test <=catchable< Alepha::TaggedAllocationError< tag >, Alepha::TaggedAllocationError< tag > >;
 
 		"size_probe"_test <=[]
 		{
-			std::cout << "Size: " << sizeof( Alepha::build_exception< Alepha::TaggedAllocationException< tag > >( "Message" ) ) << std::endl;
+			std::cout << "Size: " << sizeof( Alepha::build_exception< Alepha::TaggedAllocationError< tag > >( "Message" ) ) << std::endl;
 		};
 	};
 }

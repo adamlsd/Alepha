@@ -24,25 +24,36 @@ namespace Alepha::Hydrogen
 		 * In Alepha, there are several "grades" of exception types which can be thrown.  The grade of
 		 * an exception is "branded" into its name as the last word in camel case.
 		 *
-		 *  * `Throwable`: All exceptions inherit from this interface.  Catching this will
+		 *  * `Exception`: All exceptions inherit from this interface.  Catching this will
 		 *    catch anything which is part of this system.  Normally you just ignore this grade.
-		 *    Code that needs to catch *everything* should not catch `Throwable`, but `catch( ... )`
-		 *    instead.
+		 *    Code that needs to catch *everything* should not catch `Exception`, but `catch( ... )`
+		 *    instead.  `Exception` is the mechanism by which various situations are reported.
+		 *    For comparison, Java calls this class `Throwable`.
 		 *
-		 *  * `Notification`: When a thread is cancelled using interrupts, all exceptions thrown
+		 *  * `Condition`: An out-of-band message from functions which notify their callers of 
+		 *    new information that affects the ability to fulfill the common case expected
+		 *    result.  Note that this kind of `Exception` is not considered a contract `Violation`.
+		 *    This exception can be thrown as part of normal program operation -- it is a control
+		 *    flow device.
+		 *
+		 *  * `Notification`: When a thread is cancelled using interrupts, all `Exception`s thrown
 		 *    to do so are derived from this type.  Alepha threads are setup to catch and discard
-		 *    exceptions of this grade in the thread start function.
+		 *    `Exception`s of this grade in the thread start function.  It is legal to catch `Exception`s
+		 *    of this type type and silence it; however, `Notification` typically means that the
+		 *    target thread needs to change its behaviour.  (Note that `ThreadInterrupt` is entirely
+		 *    independent from the Alepha exception hierarchy -- this helps ensure that the thread
+		 *    termination mechanism works correctly.)
 		 *
-		 *  * `Exception`: This is the exception grade you would typically want to recover from.
-		 *    Catch this grade, typically.  They should contain sufficient information in their
+		 *  * `Error`: This is the exception grade you would typically want to recover from.
+		 *    Catch this grade, in most circumstances.  They should contain sufficient information in their
 		 *    data pack to facilitate a proper programmatic recovery.  All exceptions of this grade
 		 *    will also have `std::exception` as one of its bases, thus code which is unaware of
 		 *    Alepha exceptions, but handles basic standard exceptions cleanly, will work just fine.
-		 *    When an `Exception` models something that the standard library models, such as
-		 *    `std::bad_alloc`, then that `Exception` will be eligible for catch by that base as well.
+		 *    When an `Error` models something that the standard library models, such as
+		 *    `std::bad_alloc`, then that `Error` will be eligible for catch by that base as well.
 		 *
-		 *  * `Error`: This exception grade represents a form of moderately-unrecoverable condition.
-		 *    The `Error` grade typically indicates a condition that prevents the current thread or
+		 *  * `CriticalError`: This exception grade represents a form of moderately-unrecoverable condition.
+		 *    The `CriticalError` grade typically indicates a condition that prevents the current thread or
 		 *    program state from being easily transitioned to a recovered state.  However, a very
 		 *    large state transform, such as an unwind to the top-of-thread-callstack handler, may
 		 *    be able to recover.  For example, no more available operating system file handles.
@@ -97,15 +108,15 @@ namespace Alepha::Hydrogen
 		template< typename Exc, typename tag >
 		using Tagged= typename Exc::template tagged_type< tag >;
 
-		class Throwable
+		class Exception
 		{
 			public:
-				using grade_type= Throwable;
+				using grade_type= Exception;
 
 				class any_tagged_type;
 				template< typename Tag > class tagged_type;
 
-				virtual ~Throwable()= default;
+				virtual ~Exception()= default;
 				virtual const char *message() const noexcept= 0;
 
 				template< typename Target >
@@ -127,14 +138,14 @@ namespace Alepha::Hydrogen
 					return dynamic_cast< const Target * >( this );
 				}
 		};
-		class Throwable::any_tagged_type
+		class Exception::any_tagged_type
 			: virtual public grade_type
 		{
 			public:
 				virtual std::type_index tag() const noexcept= 0;
 		};
 		template< typename Tag >
-		class Throwable::tagged_type
+		class Exception::tagged_type
 			: virtual public grade_type, virtual public grade_type::any_tagged_type
 		{
 			public:
@@ -144,16 +155,40 @@ namespace Alepha::Hydrogen
 					return typeid( std::type_identity< Tag > );
 				}
 		};
-		using AnyTaggedThrowable= AnyTagged< Throwable >;
+		using AnyTaggedException= AnyTagged< Exception >;
 		template< typename tag >
-		using TaggedThrowable= Tagged< Throwable, tag >;
+		using TaggedException= Tagged< Exception, tag >;
+
+		// `Condition`s are "events" that indicate a need
+		// for special control flow changes.
+		// 
+		// They must be handled, but they do not represent
+		// an error -- just a "time to change your focus".
+		class Condition
+			: public virtual Exception
+		{
+			public:
+				using grade_type= Condition;
+
+				class any_tagged_type;
+				template< typename tag >
+				class tagged_type;
+		};
+		class Condition::any_tagged_type
+			: public virtual bases< grade_type, Exception::any_tagged_type > {};
+		template< typename tag >
+		class Condition::tagged_type
+			: public virtual bases< grade_type::any_tagged_type, Exception::tagged_type< tag > > {};
+		using AnyTaggedCondition= Condition::any_tagged_type;
+		template< typename tag >
+		using TaggedCondition= Condition::tagged_type< tag >;
 
 
 		// `Notification`s are "events" or "interrupts" that
 		// if ignored will gracefully terminate the current
 		// thread, but not halt the program.
 		class Notification
-			: public virtual Throwable
+			: public virtual Exception
 		{
 			public:
 				using grade_type= Notification;
@@ -163,66 +198,61 @@ namespace Alepha::Hydrogen
 				class tagged_type;
 		};
 		class Notification::any_tagged_type
-			: public virtual bases< grade_type, Throwable::any_tagged_type > {};
+			: public virtual bases< grade_type, Exception::any_tagged_type > {};
 		template< typename tag >
 		class Notification::tagged_type
-			: public virtual bases< grade_type::any_tagged_type, Throwable::tagged_type< tag > > {};
+			: public virtual bases< grade_type::any_tagged_type, Exception::tagged_type< tag > > {};
 		using AnyTaggedNotification= Notification::any_tagged_type;
 		template< typename tag >
 		using TaggedNotification= Notification::tagged_type< tag >;
 
-		using Interrupt= Notification;
-		using AnyTaggedInterrupt= AnyTaggedNotification;
-		template< typename tag >
-		using TaggedInterrupt= TaggedNotification< tag >;
-
-		// `Exception`s are recoverable at any point.
-		class ExceptionBridgeInterface
+		// `Error`s are recoverable at any point.
+		class ErrorBridgeInterface
 		{
 			public:
 				virtual const char *what() const noexcept= 0;
 		};
-		class Exception
-			: virtual public bases< Throwable >, virtual private ExceptionBridgeInterface
-		{
-			public:
-				using grade_type= Exception;
-				using ExceptionBridgeInterface::what;
-
-				class any_tagged_type;
-				template< typename tag >
-				class tagged_type;
-		};
-		class Exception::any_tagged_type : virtual public bases< grade_type, Throwable::any_tagged_type > {};
-		template< typename tag >
-		class Exception::tagged_type
-			: virtual public bases< grade_type::any_tagged_type, Throwable::tagged_type< tag > > {};
-		using AnyTaggedException= Exception::any_tagged_type;
-		template< typename tag >
-		using TaggedException= Exception::tagged_type< tag >;
-
-		// `Error`s are only really recoverable by terminating
-		// the major procedure underway.  Like terminating the
-		// entire thread or similar.  Essentially, arbitrarily
-		// localized recovery is impossible.
 		class Error
-			: virtual public bases< Throwable >
+			: virtual public bases< Exception >, virtual private ErrorBridgeInterface
 		{
 			public:
 				using grade_type= Error;
+				using ErrorBridgeInterface::what;
 
 				class any_tagged_type;
 				template< typename tag >
 				class tagged_type;
 		};
-		class Error::any_tagged_type
-			: virtual public bases< grade_type, Throwable::any_tagged_type > {};
+		class Error::any_tagged_type : virtual public bases< grade_type, Exception::any_tagged_type > {};
 		template< typename tag >
 		class Error::tagged_type
-			: virtual bases< grade_type::any_tagged_type, Throwable::tagged_type< tag > > {};
+			: virtual public bases< grade_type::any_tagged_type, Exception::tagged_type< tag > > {};
 		using AnyTaggedError= Error::any_tagged_type;
 		template< typename tag >
 		using TaggedError= Error::tagged_type< tag >;
+
+		// `CriticalError`s are only really recoverable by terminating
+		// the major procedure underway.  Like terminating the
+		// entire thread or similar.  Essentially, arbitrarily
+		// localized recovery is impossible.
+		class CriticalError
+			: virtual public bases< Exception >
+		{
+			public:
+				using grade_type= CriticalError;
+
+				class any_tagged_type;
+				template< typename tag >
+				class tagged_type;
+		};
+		class CriticalError::any_tagged_type
+			: virtual public bases< grade_type, Exception::any_tagged_type > {};
+		template< typename tag >
+		class CriticalError::tagged_type
+			: public virtual bases< grade_type::any_tagged_type, Exception::tagged_type< tag > > {};
+		using AnyTaggedCriticalError= CriticalError::any_tagged_type;
+		template< typename tag >
+		using TaggedCriticalError= CriticalError::tagged_type< tag >;
 
 		// `Violation`s are unrecoverable events which happen to
 		// the process.  They are impossible to recover from.
@@ -233,7 +263,7 @@ namespace Alepha::Hydrogen
 		// which is somewhat different to the normal dtors in scope
 		// and then continue the unwind process
 		class Violation
-			: virtual public bases< Throwable >
+			: virtual public bases< Exception >
 		{
 			private:
 				bool active= true;
@@ -249,15 +279,15 @@ namespace Alepha::Hydrogen
 				Violation( const Violation &copy )= delete;
 				Violation( Violation &copy ) : active( copy.active ) { copy.active= false; }
 		};
-		class Violation::any_tagged_type : virtual public bases< grade_type, Throwable::any_tagged_type > {};
+		class Violation::any_tagged_type : virtual public bases< grade_type, Exception::any_tagged_type > {};
 		template< typename tag >
-		class Violation::tagged_type : virtual public bases< grade_type::any_tagged_type, Throwable::tagged_type< tag > > {};
+		class Violation::tagged_type : virtual public bases< grade_type::any_tagged_type, Exception::tagged_type< tag > > {};
 		using AnyTaggedViolation= Violation::any_tagged_type;
 		template< typename tag >
 		using TaggedViolation= Violation::tagged_type< tag >;
 
 		template< typename T >
-		concept DerivedFromException= std::is_base_of_v< Exception, T >;
+		concept DerivedFromError= std::is_base_of_v< Error, T >;
 
 		class NamedResourceStorage;
 		class NamedResourceInterface
@@ -277,48 +307,48 @@ namespace Alepha::Hydrogen
 			public:
 				std::string_view resourceName() const noexcept final { return storage; }
 		};
-		class NamedResourceThrowable : public virtual synthetic_exception< struct named_resource_throwable, Throwable >, virtual public NamedResourceInterface {};
-		using AnyTaggedNamedResourceThrowable= NamedResourceThrowable::any_tagged_type;
-		template< typename tag >
-		using TaggedNamedResourceThrowable= NamedResourceThrowable::tagged_type< tag >;
-
-		using NamedResourceNotification= synthetic_exception< struct named_resource_notification, Notification, NamedResourceThrowable >;
-		using AnyTaggedNamedResourceNotification= NamedResourceNotification::any_tagged_type;
-		template< typename tag >
-		using TaggedNamedResourceNotification= NamedResourceNotification::tagged_type< tag >;
-
-		using NamedResourceException= synthetic_exception< struct named_resource_exception, Exception, NamedResourceThrowable >;
+		class NamedResourceException : public virtual synthetic_exception< struct named_resource_throwable, Exception >, virtual public NamedResourceInterface {};
 		using AnyTaggedNamedResourceException= NamedResourceException::any_tagged_type;
 		template< typename tag >
 		using TaggedNamedResourceException= NamedResourceException::tagged_type< tag >;
 
-		using NamedResourceError= synthetic_exception< struct named_resource_error, Error, NamedResourceThrowable >;
+		using NamedResourceNotification= synthetic_exception< struct named_resource_notification, Notification, NamedResourceException >;
+		using AnyTaggedNamedResourceNotification= NamedResourceNotification::any_tagged_type;
+		template< typename tag >
+		using TaggedNamedResourceNotification= NamedResourceNotification::tagged_type< tag >;
+
+		using NamedResourceError= synthetic_exception< struct named_resource_exception, Error, NamedResourceException >;
 		using AnyTaggedNamedResourceError= NamedResourceError::any_tagged_type;
 		template< typename tag >
 		using TaggedNamedResourceError= NamedResourceError::tagged_type< tag >;
 
-		using NamedResourceViolation= synthetic_exception< struct named_resource_violation, Violation, NamedResourceThrowable >;
+		using NamedResourceCriticalError= synthetic_exception< struct named_resource_error, CriticalError, NamedResourceException >;
+		using AnyTaggedNamedResourceCriticalError= NamedResourceCriticalError::any_tagged_type;
+		template< typename tag >
+		using TaggedNamedResourceCriticalError= NamedResourceCriticalError::tagged_type< tag >;
+
+		using NamedResourceViolation= synthetic_exception< struct named_resource_violation, Violation, NamedResourceException >;
 		using AnyTaggedNamedResourceViolation= NamedResourceViolation::any_tagged_type;
 		template< typename tag >
 		using TaggedNamedResourceViolation= NamedResourceViolation::tagged_type< tag >;
 
-		class OutOfRangeThrowable
-			: virtual public synthetic_exception< struct out_of_range_throwable, Throwable > {};
-		using AnyTaggedOutOfRangeThrowable= OutOfRangeThrowable::any_tagged_type;
-		template< typename tag >
-		using TaggedOutOfRangeThrowable= OutOfRangeThrowable::tagged_type< tag >;
-
-		using OutOfRangeException= synthetic_exception< struct out_of_range_throwable, Exception, OutOfRangeThrowable >;
+		class OutOfRangeException
+			: virtual public synthetic_exception< struct out_of_range_throwable, Exception > {};
 		using AnyTaggedOutOfRangeException= OutOfRangeException::any_tagged_type;
 		template< typename tag >
 		using TaggedOutOfRangeException= OutOfRangeException::tagged_type< tag >;
 
-		using OutOfRangeError= synthetic_exception< struct out_of_range_throwable, Error, OutOfRangeThrowable >;
+		using OutOfRangeError= synthetic_exception< struct out_of_range_throwable, Error, OutOfRangeException >;
 		using AnyTaggedOutOfRangeError= OutOfRangeError::any_tagged_type;
 		template< typename tag >
 		using TaggedOutOfRangeError= OutOfRangeError::tagged_type< tag >;
 
-		using OutOfRangeViolation= synthetic_exception< struct out_of_range_throwable, Violation, OutOfRangeThrowable >;
+		using OutOfRangeCriticalError= synthetic_exception< struct out_of_range_throwable, CriticalError, OutOfRangeException >;
+		using AnyTaggedOutOfRangeCriticalError= OutOfRangeCriticalError::any_tagged_type;
+		template< typename tag >
+		using TaggedOutOfRangeCriticalError= OutOfRangeCriticalError::tagged_type< tag >;
+
+		using OutOfRangeViolation= synthetic_exception< struct out_of_range_throwable, Violation, OutOfRangeException >;
 		using AnyTaggedOutOfRangeViolation= OutOfRangeViolation::any_tagged_type;
 		template< typename tag >
 		using TaggedOutOfRangeViolation= OutOfRangeViolation::tagged_type< tag >;
@@ -346,27 +376,27 @@ namespace Alepha::Hydrogen
 				std::size_t upperBound() const noexcept override { return top; }
 				std::size_t requested() const noexcept override { return request; }
 		};
-		class IndexOutOfRangeThrowable
-			: virtual public synthetic_exception< struct index_out_of_range_throwable, Throwable, OutOfRangeThrowable > {};
-		using AnyTaggedIndexOutOfRangeThrowable= IndexOutOfRangeThrowable::any_tagged_type;
-		template< typename tag >
-		using TaggedIndexOutOfRangeThrowable= IndexOutOfRangeThrowable::tagged_type< tag >;
-
 		class IndexOutOfRangeException
-			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeException, IndexOutOfRangeThrowable > {};
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, Exception, OutOfRangeException > {};
 		using AnyTaggedIndexOutOfRangeException= IndexOutOfRangeException::any_tagged_type;
 		template< typename tag >
 		using TaggedIndexOutOfRangeException= IndexOutOfRangeException::tagged_type< tag >;
 
 		class IndexOutOfRangeError
-			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeError, IndexOutOfRangeThrowable > {};
-		using AnyTaggedIndexOutOfRangeError= IndexOutOfRangeError::any_tagged_type;
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeError, IndexOutOfRangeException > {};
+		using AnyTaggedIndexOutOfRangeException= IndexOutOfRangeException::any_tagged_type;
 		template< typename tag >
-		using TaggedIndexOutOfRangeError= IndexOutOfRangeError::tagged_type< tag >;
+		using TaggedIndexOutOfRangeException= IndexOutOfRangeException::tagged_type< tag >;
+
+		class IndexOutOfRangeCriticalError
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeCriticalError, IndexOutOfRangeException > {};
+		using AnyTaggedIndexOutOfRangeCriticalError= IndexOutOfRangeCriticalError::any_tagged_type;
+		template< typename tag >
+		using TaggedIndexOutOfRangeCriticalError= IndexOutOfRangeCriticalError::tagged_type< tag >;
 
 
 		class IndexOutOfRangeViolation
-			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeViolation, IndexOutOfRangeThrowable > {};
+			: virtual public synthetic_exception< struct index_out_of_range_throwable, OutOfRangeViolation, IndexOutOfRangeException > {};
 		using AnyTaggedIndexOutOfRangeViolation= IndexOutOfRangeViolation::any_tagged_type;
 		template< typename tag >
 		using TaggedIndexOutOfRangeViolation= IndexOutOfRangeViolation::tagged_type< tag >;
@@ -389,29 +419,29 @@ namespace Alepha::Hydrogen
 			public:
 				std::size_t allocationAmount() const noexcept final { return amount; }
 		};
-		class AllocationThrowable
-			: virtual public synthetic_exception< struct allocation_throwable, Throwable >, virtual public AllocationAmountInterface {};
-		using AnyTaggedAllocationThrowable= AllocationThrowable::any_tagged_type;
-		template< typename tag >
-		using TaggedAllocationThrowable= AllocationThrowable::tagged_type< tag >;
-
-		using AllocationException= synthetic_exception< struct allocation_exception, Exception, AllocationThrowable >;
+		class AllocationException
+			: virtual public synthetic_exception< struct allocation_throwable, Exception >, virtual public AllocationAmountInterface {};
 		using AnyTaggedAllocationException= AllocationException::any_tagged_type;
 		template< typename tag >
 		using TaggedAllocationException= AllocationException::tagged_type< tag >;
 
-		using AllocationError= synthetic_exception< struct allocation_error, Error, AllocationThrowable >;
+		using AllocationError= synthetic_exception< struct allocation_exception, Error, AllocationException >;
 		using AnyTaggedAllocationError= AllocationError::any_tagged_type;
 		template< typename tag >
 		using TaggedAllocationError= AllocationError::tagged_type< tag >;
 
-		using AllocationViolation= synthetic_exception< struct allocation_violation, Violation, AllocationThrowable >;
+		using AllocationCriticalError= synthetic_exception< struct allocation_error, CriticalError, AllocationException >;
+		using AnyTaggedAllocationCriticalError= AllocationCriticalError::any_tagged_type;
+		template< typename tag >
+		using TaggedAllocationCriticalError= AllocationCriticalError::tagged_type< tag >;
+
+		using AllocationViolation= synthetic_exception< struct allocation_violation, Violation, AllocationException >;
 		using AnyTaggedAllocationViolation= AllocationViolation::any_tagged_type;
 		template< typename tag >
 		using TaggedAllocationViolation= AllocationViolation::tagged_type< tag >;
 
 		class MessageStorage
-			: virtual public Throwable
+			: virtual public Exception
 		{
 			protected:
 				std::string storage;
@@ -425,7 +455,7 @@ namespace Alepha::Hydrogen
 
 		template< typename std_exception >
 		class GenericExceptionBridge
-			: virtual public std_exception, public virtual ExceptionBridgeInterface, virtual public Exception
+			: virtual public std_exception, public virtual ErrorBridgeInterface, virtual public Exception
 		{
 			public:
 				const char *what() const noexcept override { return message(); }
@@ -436,7 +466,7 @@ namespace Alepha::Hydrogen
 		build_exception( std::string message )
 		{
 			if constexpr( false ) {}
-			else if constexpr( std::is_base_of_v< AllocationException, Kind > )
+			else if constexpr( std::is_base_of_v< AllocationError, Kind > )
 			{
 				class Undergird
 					: virtual public Kind, virtual protected GenericExceptionBridge< std::bad_alloc >,
@@ -444,16 +474,16 @@ namespace Alepha::Hydrogen
 					virtual public std::bad_alloc
 				{};
 
-				class Exception
+				class Error
 					: virtual private Undergird, virtual public Kind, public virtual std::bad_alloc
 				{
 					public:
-						explicit Exception( std::string message ) : MessageStorage( std::move( message ) ) {}
+						explicit Error( std::string message ) : MessageStorage( std::move( message ) ) {}
 				};
 
-				return Exception{ std::move( message ) };
+				return Error{ std::move( message ) };
 			}
-			else if constexpr( std::is_base_of_v< IndexOutOfRangeException, Kind > )
+			else if constexpr( std::is_base_of_v< IndexOutOfRangeError, Kind > )
 			{
 				class Undergird
 					: virtual public Kind, virtual protected GenericExceptionBridge< std::out_of_range >,
@@ -461,32 +491,32 @@ namespace Alepha::Hydrogen
 					virtual public std::out_of_range
 				{};
 
-				class Exception
+				class Error
 					: virtual private Undergird, virtual public Kind, public virtual std::out_of_range
 				{
 					public:
-						explicit Exception( std::string message ) : MessageStorage( std::move( message ) ) {}
+						explicit Error( std::string message ) : MessageStorage( std::move( message ) ) {}
 				};
 
-				return Exception{ std::move( message ) };
+				return Error{ std::move( message ) };
 			}
-			else if constexpr( std::is_base_of_v< Exception, Kind > )
+			else if constexpr( std::is_base_of_v< Error, Kind > )
 			{
 				class Undergird
 					: virtual public Kind, virtual protected GenericExceptionBridge< std::exception >,
 					virtual protected MessageStorage, virtual public std::exception
 				{};
 
-				class Exception
+				class Error
 					: virtual private Undergird,
 					virtual public Kind,
 					virtual public std::exception
 				{
 					public:
-						explicit Exception( std::string message ) : MessageStorage( std::move( message ) ) {}
+						explicit Error( std::string message ) : MessageStorage( std::move( message ) ) {}
 				};
 
-				return Exception{ std::move( message ) };
+				return Error{ std::move( message ) };
 			}
 			else if constexpr( true )
 			{
@@ -504,6 +534,10 @@ namespace Alepha::Hydrogen
 		using FinishedException= synthetic_exception< struct finished_exception, Exception >;
 		using AnyTaggedFinishedException= AnyTagged< FinishedException >;
 		template< typename tag > using TaggedFinishedException= Tagged< FinishedException, tag >;
+
+		using FinishedCondition= synthetic_exception< struct finished_exception, Condition, FinishedException >;
+		using AnyTaggedFinishedCondition= AnyTagged< FinishedCondition >;
+		template< typename tag > using TaggedFinishedCondition= Tagged< FinishedCondition, tag >;
 	}
 
 	inline namespace exports {}
