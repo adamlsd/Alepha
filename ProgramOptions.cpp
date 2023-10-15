@@ -190,11 +190,15 @@ namespace Alepha::Cavorite  ::detail::  program_options
 				}
 			}
 
+			const std::size_t width= getConsoleWidth();
+			std::cout << StartWrap{ width };
 			std::cout << "Options:" << std::endl << std::endl;
+			std::cout << EndWrap;
 
 			// Inspect and print each option.
 			for( const auto &[ name, def ]: programOptions() )
 			{
+				std::cout << StartWrap{ width, alignmentWidth };
 				const auto &[ _, helpText, defaultBuilder, domains ]= def;
 				// How much unused of the max width there will be
 				const std::size_t padding= alignmentWidth - name.size() - 2;
@@ -221,16 +225,17 @@ namespace Alepha::Cavorite  ::detail::  program_options
 				// Append the incompatibility text, when we see mutually-exclusive options.
 				substitutionTemplate+= buildIncompatibleHelpText( name, domains, exclusivityMembers );
 
-				const std::string helpString= expandVariables( substitutionTemplate, substitutions, '!' );
-				printString( helpString, alignmentWidth );
+				std::cout << expandVariables( substitutionTemplate, substitutions, '!' );
+				std::cout << EndWrap;
 				std::cout << std::endl;
 			}
+
 
 			// Check for required options, and print a summary of those:
 			if( not requiredOptions().empty() ) for( const auto &[ _, group ]: requiredOptions() )
 			{
-				const std::size_t width= getConsoleWidth();
-				std::ostringstream oss;
+				std::ostream &oss= std::cout;
+				oss << StartWrap{ width };
 				oss << "At least one of the options in this group are required: ";
 				bool first= true;
 				for( const auto &required: group )
@@ -240,7 +245,7 @@ namespace Alepha::Cavorite  ::detail::  program_options
 					oss << '`' << required << '`';
 				}
 
-				std::cout << wordWrap( oss.str(), width ) << std::endl;
+				oss << std::endl;
 			}
 		}
 	}
