@@ -229,7 +229,7 @@ namespace Alepha::Hydrogen::Testing
 		using namespace detail::testing::exports;
 	}
 
-	namespace exports::inline literals::inline program_option_literals
+	namespace exports::inline literals::inline test_literals
 	{
 		using namespace detail::testing::exports::literals;
 	}
