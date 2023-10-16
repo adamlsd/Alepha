@@ -135,6 +135,7 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 		{
 			auto *const streambuf= static_cast< WordWrapStreambuf * >( ios.pword( wrapperIndex ) );
 			streambuf->drain();
+			dynamic_cast< std::ostream & >( ios ).rdbuf( streambuf->underlying );
 			delete streambuf;
 			ios.pword( wrapperIndex )= nullptr;
 		}
@@ -177,6 +178,7 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 			state= 1;
 			os.register_callback( wordwrapCallback, wrapperIndex );
 		}
+		assert( os.pword( wrapperIndex ) == nullptr );
 		os.pword( wrapperIndex )= buf.release();
 
 		return os;
