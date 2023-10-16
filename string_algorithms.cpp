@@ -139,7 +139,6 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 	std::string
 	exports::expandVariables( const std::string &text, const VarMap &vars, const char sigil )
 	{
-		#if 1
 		std::ostringstream oss;
 
 		oss << StartSubstitutions{ sigil, vars };
@@ -147,47 +146,6 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 		oss << EndSubstitutions;
 
 		return std::move( oss ).str();
-		#else
-		if( C::debugExpansion ) error() << "Expanding variables in " << text << std::endl;
-
-		std::string rv;
-		std::string varName;
-
-		enum { Symbol, Normal } mode= Normal;
-
-		for( const char ch: text )
-		{
-			if( mode == Normal and ch == sigil )
-			{
-				mode= Symbol;
-				varName.clear();
-				continue;
-			}
-			if( mode == Symbol and ch == sigil )
-			{
-				mode= Normal;
-				if( not varName.empty() )
-				{
-					if( not vars.contains( varName ) )
-					{
-						throw std::runtime_error( "No such variable: `" + varName + "`" );
-					}
-					if( C::debugExpansion ) error() << "Expanding variable with name `" << varName << "`" << std::endl;
-					rv+= vars.at( varName )();
-				}
-				else rv+= sigil;
-				continue;
-			}
-
-			auto &current= mode == Normal ? rv : varName;
-			current+= ch;
-		}
-
-		if( mode != Normal ) throw std::runtime_error( "Unterminated variable `" + varName + " in expansion of `" + text + "`" );
-		if( C::debugExpansion ) error() << "Expansion was: `" << rv << "`" << std::endl;
-
-		return rv;
-		#endif
 	}
 
 	std::vector< std::string >
