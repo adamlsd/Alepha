@@ -8,7 +8,7 @@ static_assert( __cplusplus > 2020'00 );
 
 namespace
 {
-	using namespace Alepha::Testing::literals::program_option_literals;
+	using namespace Alepha::Testing::literals::test_literals;;
 	using Alepha::Testing::TableTest;
 }
 
