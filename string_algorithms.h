@@ -36,6 +36,28 @@ namespace Alepha::inline Cavorite  ::detail::  string_algorithms
 		 */
 		std::string expandVariables( const std::string &text, const VarMap &vars, const char sigil );
 
+		struct StartSubstitutions
+		{
+			const char sigil;
+			VarMap substitutions;
+
+			explicit
+			StartSubstitutions( const char sigil, VarMap substitutions )
+					: sigil( sigil ), substitutions( std::move( substitutions ) )
+			{}
+		};
+
+		// Note that these function as a stack -- so `EndSubstitutions` will
+		// terminate the top of that stack.
+		constexpr struct EndSubstitutions_t {} EndSubstitutions;
+
+		inline namespace impl
+		{
+			std::ostream &operator << ( std::ostream &, StartSubstitutions && );
+
+			std::ostream &operator << ( std::ostream &, EndSubstitutions_t );
+		}
+
 		/*!
 		 * Returns a vector of strings parsed from a comma separated string.
 		 *
