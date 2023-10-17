@@ -1,6 +1,7 @@
 #cmake_policy( SET CMP0002 OLD )
 
 add_compile_options( -I ${CMAKE_BINARY_DIR}  ; -std=c++20 ; -I . )
+add_compile_options( -fdiagnostics-column-unit=byte )
 
 
 list( APPEND CMAKE_CTEST_ARGUMENTS "-VV" )
