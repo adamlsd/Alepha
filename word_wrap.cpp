@@ -10,6 +10,8 @@ static_assert( __cplusplus > 2020 );
 #include <sstream>
 #include <memory>
 
+#include <Alepha/Utility/StackableStreambuf.h>
+
 #include "evaluation_helpers.h"
 
 namespace Alepha::Cavorite  ::detail::  word_wrap
