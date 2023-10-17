@@ -4,7 +4,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Alepha.h>
 
-#include <ios>
+#include <ostream>
 #include <exception>
 #include <stdexcept>
 
@@ -36,6 +36,7 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 
 			~StackableStreambuf() {}
 
+			// Children must be created by `new`.
 			explicit
 			StackableStreambuf( std::ostream &host )
 				: underlying( host.rdbuf( this ) )
@@ -67,7 +68,7 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 			}
 	};
 
-	void
+	inline void
 	impl::releaseStack( std::ios_base &ios )
 	{
 		auto &os= dynamic_cast< std::ostream & >( ios );
@@ -91,7 +92,11 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 	}
 
 	template< typename T >
-	struct exports::PushStack : T {};
+	struct exports::PushStack
+		: T
+	{
+		using T::T;
+	};
 
 	template< typename T >
 	struct exports::PopStack {};
@@ -100,7 +105,7 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 	std::ostream &
 	operator << ( std::ostream &os, PushStack< T > &&params )
 	{
-		build_streambuf( os, params );
+		build_streambuf( os, std::move( params ) );
 		return os;
 	}
 
@@ -112,4 +117,9 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 		return os;
 	}
 
+}
+
+namespace Alepha::Hydrogen::Utility::inline exports::inline stackable_streambuf
+{
+	using namespace detail::stackable_streambuf::exports;
 }
