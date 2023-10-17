@@ -10,8 +10,6 @@ static_assert( __cplusplus > 2020 );
 #include <sstream>
 #include <memory>
 
-#include <Alepha/Utility/StackableStreambuf.h>
-
 #include "evaluation_helpers.h"
 
 namespace Alepha::Cavorite  ::detail::  word_wrap
@@ -41,38 +39,23 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 		}
 
 		struct WordWrapStreambuf
-			: public std::streambuf
+			: public Utility::StackableStreambuf
 		{
 			public:
-				std::unique_ptr< std::streambuf > ownership;
-				std::streambuf *underlying= nullptr;
-
 				std::size_t maximumWidth= 0;
 				std::size_t nextLineOffset= 0;
 				std::size_t currentLineLength= 0;
 
 				std::string currentWord;
 
-				void writeChar( const char ch );
+				explicit
+				WordWrapStreambuf( std::ostream &os, const std::size_t width, const std::size_t offset )
+					: StackableStreambuf( os ), maximumWidth( width ), nextLineOffset( offset )
+				{}
 
-				void drain();
+				void writeChar( const char ch ) override;
 
-			public:
-				int
-				overflow( const int ch ) override
-				{
-					if( ch == EOF ) throw std::logic_error( "EOF!" );
-					writeChar( ch );
-
-					return 1;
-				}
-
-				std::streamsize
-				xsputn( const char *const data, const std::streamsize amt ) override
-				{
-					for( std::streamsize i= 0; i< amt; ++i ) overflow( data[ i ] );
-					return amt;
-				}
+				void drain() override;
 		};
 	}
 
@@ -160,29 +143,9 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 		}
 	}
 
-	std::ostream &
-	impl::operator << ( std::ostream &os, EndWrap_t )
+	void
+	impl::build_streambuf( std::ostream &os, StartWrap &&args )
 	{
-		releaseWrapper( os );
-		return os;
-	}
-
-	std::ostream &
-	impl::operator << ( std::ostream &os, StartWrap args )
-	{
-		auto buf= std::make_unique< WordWrapStreambuf >();
-		buf->maximumWidth= args.width;
-		buf->nextLineOffset= args.nextLineOffset;
-		buf->underlying= os.rdbuf( buf.get() );
-		auto &state= os.iword( wrapperIndex );
-		if( not state )
-		{
-			state= 1;
-			os.register_callback( wordwrapCallback, wrapperIndex );
-		}
-		assert( os.pword( wrapperIndex ) == nullptr );
-		os.pword( wrapperIndex )= buf.release();
-
-		return os;
+		new WordWrapStreambuf( os, args.width, args.nextLineOffset );
 	}
 }
