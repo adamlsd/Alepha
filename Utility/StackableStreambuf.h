@@ -24,6 +24,7 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 	inline namespace impl
 	{
 		void releaseStack( std::ios_base &ios );
+		bool releaseTop( std::ostream &os );
 		
 		void iosCallback( const std::ios_base::event event, std::ios_base &ios, const int idx );
 	}
@@ -68,19 +69,26 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 			}
 	};
 
+	inline bool
+	impl::releaseTop( std::ostream &os )
+	{
+		auto *const streambuf= os.rdbuf();
+		if( not streambuf ) return false;
+		auto *const stacked= dynamic_cast< StackableStreambuf * >( streambuf );
+		if( not stacked ) return false;
+
+		stacked->drain();
+		os.rdbuf( stacked->underlying );
+		delete stacked;
+		return true;
+	}
+
 	inline void
 	impl::releaseStack( std::ios_base &ios )
 	{
 		auto &os= dynamic_cast< std::ostream & >( ios );
-		auto *streambuf= os.rdbuf();
 
-		while( auto *stacked= dynamic_cast< StackableStreambuf * >( streambuf ) )
-		{
-			streambuf= stacked->underlying;
-			stacked->drain();
-			os.rdbuf( stacked->underlying );
-			delete stacked;
-		}
+		while( releaseTop( os ) );
 	}
 
 	inline void
@@ -113,7 +121,7 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 	std::ostream &
 	operator << ( std::ostream &os, PopStack< T > )
 	{
-		releaseStack( os );
+		if( not releaseTop( os ) ) throw std::logic_error( "OStream has no stacked streambufs!" );
 		return os;
 	}
 
