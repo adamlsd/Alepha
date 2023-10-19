@@ -2,6 +2,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include "../string_algorithms.h"
 
+#include <cstdint>
+
 #include <Alepha/Testing/test.h>
 #include <Alepha/Testing/TableTest.h>
 

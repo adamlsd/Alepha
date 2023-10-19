@@ -2,6 +2,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Exception.h>
 
+#include <cstdint>
 #include <type_traits>
 
 #include <Alepha/Testing/test.h>

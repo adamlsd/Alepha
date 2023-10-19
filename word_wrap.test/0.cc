@@ -2,6 +2,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include "../word_wrap.h"
 
+#include <cstdint>
+
 #include <Alepha/Testing/test.h>
 #include <Alepha/Testing/TableTest.h>
 #include <Alepha/Utility/evaluation.h>
