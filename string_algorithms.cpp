@@ -18,6 +18,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 			const bool debug= false;
 			const bool debugExpansion= false or C::debug;
 			const bool debugCommas= false or C::debug;
+			const bool debugIOStreamLifecycle= false or C::debug;
 		}
 
 		struct VariableExpansionStreambuf
@@ -82,10 +83,10 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 				void
 				drain()
 				{
-					std::cerr << "Drain called, and mode is: " << mode << std::endl;
+					if( C::debugIOStreamLifecycle ) error() << "Drain called, and mode is: " << mode << std::endl;
 					if( mode != Normal )
 					{
-						std::cerr << "Mode not being normal, we're throwing (" << ++throws << " times now)..." << std::endl;
+						if( C::debugIOStreamLifecycle ) error() << "Mode not being normal, we're throwing (" << ++throws << " times now)..." << std::endl;
 						mode= Normal;
 						throw std::runtime_error{ "Unterminated variable `" + varName.str() + " in expansion." };
 					}
@@ -97,7 +98,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 		void
 		releaseWrapper( std::ostream &os )
 		{
-			std::cerr << "Release wrapper called on: " << &os << std::endl;
+			if( C::debugIOStreamLifecycle ) error() << "Release wrapper called on: " << &os << std::endl;
 			auto *const streambuf= static_cast< VariableExpansionStreambuf * >( os.pword( wrapperIndex ) );
 			if( not streambuf ) throw std::logic_error{ "Attempt to remove a substitution context which doesn't exist." };
 
@@ -106,7 +107,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 				[&] { return os.rdbuf( streambuf->underlying ); },
 				[&] ( std::streambuf *streambuf ) noexcept
 				{
-					std::cerr << "Deletion actually happening, now." << std::endl;
+					if( C::debugIOStreamLifecycle ) error() << "Deletion actually happening, now." << std::endl;
 					delete streambuf;
 					os.pword( wrapperIndex )= nullptr;
 				}
@@ -117,7 +118,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 		void
 		wordwrapCallback( const std::ios_base::event event, std::ios_base &ios, const int idx ) noexcept
 		{
-			std::cerr << "ios callback called on: " << &ios << std::endl;
+			if( C::debugIOStreamLifecycle ) error() << "ios callback called on: " << &ios << std::endl;
 			if( wrapperIndex != idx ) throw std::logic_error{ "Wrong index." };
 
 			if( not ios.pword( wrapperIndex ) ) return;
@@ -142,7 +143,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 		{
 			state= 1;
 			os.register_callback( wordwrapCallback, wrapperIndex );
-			std::cerr << "Adding callback to " << (void *) static_cast< std::ios * >( &os ) << std::endl;
+			if( C::debugIOStreamLifecycle ) error() << "Adding callback to " << (void *) static_cast< std::ios * >( &os ) << std::endl;
 		}
 
 		assert( os.pword( wrapperIndex ) == nullptr );
