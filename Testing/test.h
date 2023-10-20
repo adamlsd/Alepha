@@ -15,7 +15,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/console.h>
 #include <Alepha/types.h>
-#include <Alepha/Utility/evaluation.h>
+
+#include <Alepha/Utility/evaluation_helpers.h>
 #include <Alepha/Utility/StaticValue.h>
 
 namespace Alepha::Hydrogen::Testing
@@ -36,7 +37,7 @@ namespace Alepha::Hydrogen::Testing
 		}
 
 		using namespace std::literals::string_literals;
-		using namespace Utility::exports::evaluation;
+		using namespace Utility::exports::evaluation_helpers;
 		using namespace Utility::exports::static_value;
 
 		struct TestName

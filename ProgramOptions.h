@@ -91,11 +91,14 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/Alepha.h>
 #include <Alepha/Concepts.h>
 #include <Alepha/string_algorithms.h>
-#include <Alepha/evaluation_helpers.h>
+
+#include <Alepha/Utility/evaluation_helpers.h>
 
 namespace Alepha::inline Cavorite  ::detail::  program_options
 {
 	inline namespace exports {}
+
+	using namespace Utility::exports::evaluation_helpers;
 
 	/*!
 	 * User created unique symbols can be bound to options to build classes of options.

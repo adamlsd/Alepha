@@ -7,7 +7,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Testing/test.h>
 
-#include <Alepha/Utility/evaluation.h>
+#include <Alepha/Utility/evaluation_helpers.h>
 
 #include <cassert>
 
@@ -19,7 +19,7 @@ main( const int argcnt, const char *const *const argvec )
 
 namespace
 {
-	using namespace Alepha::Utility::evaluation;
+	using namespace Alepha::Utility::exports::evaluation_helpers;
 	using namespace Alepha::Testing::literals;
 
 	using std::begin, std::end;

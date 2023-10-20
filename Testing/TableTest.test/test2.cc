@@ -2,7 +2,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Testing/TableTest.h>
 #include <Alepha/Testing/test.h>
-#include <Alepha/Utility/evaluation.h>
+#include <Alepha/Utility/evaluation_helpers.h>
 
 
 int
@@ -15,7 +15,7 @@ main( const int argcnt, const char *const *const argvec )
 namespace
 {
 	using namespace Alepha::Testing::exports;
-	using namespace Alepha::Utility::exports::evaluation;
+	using namespace Alepha::Utility::exports::evaluation_helpers;
 
 	int
 	add( int a, int b )

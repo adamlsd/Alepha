@@ -10,12 +10,14 @@ static_assert( __cplusplus > 2020 );
 #include <sstream>
 #include <memory>
 
-#include "evaluation_helpers.h"
+#include <Alepha/Utility/evaluation_helpers.h>
 
 namespace Alepha::Cavorite  ::detail::  word_wrap
 {
 	namespace
 	{
+		using namespace Utility::exports::evaluation_helpers;
+
 		// Returns the number of chars in the line just written to.
 		std::size_t
 		applyWordToLine( const std::size_t maximumWidth, const std::size_t nextLineOffset, const std::size_t currentLineWidth, std::string &&word, std::ostream &result )

@@ -29,7 +29,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/function_traits.h>
 #include <Alepha/template_for_each.h>
 
-#include <Alepha/Utility/evaluation.h>
+#include <Alepha/Utility/evaluation_helpers.h>
 
 #include <Alepha/TotalOrder.h>
 #include <Alepha/console.h>
@@ -64,7 +64,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	}
 
 	using std::begin, std::end;
-	using namespace Utility::exports::evaluation;
+	using namespace Utility::exports::evaluation_helpers;
 	using namespace std::literals::string_literals;
 
 	template< template< typename, typename... > class Sequence, typename ... TupleArgs >

@@ -2,15 +2,19 @@ static_assert( __cplusplus > 2020'00 );
 
 #include "ProgramOptions.h"
 
+#include <Alepha/Utility/evaluation_helpers.h>
+
 namespace
 {
 	using namespace Alepha::literals::option_literals;
 	using namespace std::literals::string_literals;
 
+	using namespace Alepha::Utility::exports::evaluation_helpers;
+
 	int optionA= 42;
 	std::optional< std::string > optionB;
 
-	auto init= Alepha::enroll <=[]
+	auto init= enroll <=[]
 	{
 		--"set-a"_option << optionA << "The option is an integer.  !default!";
 		--"set-b"_option << optionB << "The option is a string, no defaults.";

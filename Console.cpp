@@ -15,6 +15,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <ext/stdio_filebuf.h>
 
+#include <Alepha/Utility/evaluation_helpers.h>
+
 #include "Enum.h"
 #include "ProgramOptions.h"
 #include "StaticValue.h"
@@ -42,6 +44,8 @@ namespace Alepha::Cavorite  ::detail::  console
 	namespace
 	{
 		using namespace std::literals::string_literals;
+
+		using namespace Utility::exports::evaluation_helpers;
 
 		namespace C
 		{
