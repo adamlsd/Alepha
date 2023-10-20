@@ -21,6 +21,7 @@ add_subdirectory( Meta )
 add_subdirectory( Proof )
 add_subdirectory( Reflection )
 add_subdirectory( Testing )
+add_subdirectory( Utility )
 
 # The local subdir tests to build
 add_subdirectory( AutoRAII.test )
