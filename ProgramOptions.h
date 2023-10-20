@@ -78,6 +78,7 @@ static_assert( __cplusplus > 2020'00 );
  * an informative message about the parsing error encountered.
  */
 
+#include <Alepha/Alepha.h>
 
 #include <string>
 #include <typeindex>

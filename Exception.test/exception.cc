@@ -24,6 +24,7 @@ namespace
 {
 	namespace util= Alepha::Utility;
 	using namespace Alepha::Testing::exports;
+	namespace boost= Alepha::boost;
 
 	struct tag;
 

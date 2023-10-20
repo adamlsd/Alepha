@@ -1,7 +1,8 @@
 #cmake_policy( SET CMP0002 OLD )
 
-add_compile_options( -I ${CMAKE_BINARY_DIR}  ; -std=c++20 ; -I . )
+add_compile_options( -std=c++20 )
 add_compile_options( -fdiagnostics-column-unit=byte )
+include_directories( ${CMAKE_BINARY_DIR} . )
 
 
 list( APPEND CMAKE_CTEST_ARGUMENTS "-VV" )
@@ -11,6 +12,11 @@ set( VERBOSE 1 )
 set( CMAKE_VERBOSE_MAKEFILE true )
 
 file( CREATE_LINK ${CMAKE_SOURCE_DIR} Alepha SYMBOLIC )
+
+if( DEFINED ALEPHA_BOOST_PATH )
+file( CREATE_LINK ${CMAKE_BINARY_DIR}/${ALEPHA_BOOST_PATH} boost SYMBOLIC )
+include_directories( ${CMAKE_BINARY_DIR}/${ALEPHA_BOOST_PATH}/.. )
+endif()
 
 
 include(CTest)
