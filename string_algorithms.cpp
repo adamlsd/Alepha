@@ -7,6 +7,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <exception>
 
 #include "error.h"
+#include "AutoRAII.h"
 
 namespace Alepha::Cavorite  ::detail::  string_algorithms
 {
@@ -27,7 +28,8 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 				VarMap substitutions;
 				std::stringbuf varName;
 				char sigil;
-				enum { Symbol, Normal } mode= Normal;
+				enum { Symbol= 1, Normal= 0 } mode= Normal;
+				int throws= 0;
 
 				void
 				writeChar( const char ch )
@@ -80,32 +82,51 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 				void
 				drain()
 				{
-					if( mode != Normal ) throw std::runtime_error{ "Unterminated variable `" + varName.str() + " in expansion." };
+					std::cerr << "Drain called, and mode is: " << mode << std::endl;
+					if( mode != Normal )
+					{
+						std::cerr << "Mode not being normal, we're throwing (" << ++throws << " times now)..." << std::endl;
+						mode= Normal;
+						throw std::runtime_error{ "Unterminated variable `" + varName.str() + " in expansion." };
+					}
 				}
 		};
 
 		const auto wrapperIndex= std::ios::xalloc();
 
 		void
-		releaseWrapper( std::ios_base &ios )
+		releaseWrapper( std::ostream &os )
 		{
-			auto *const streambuf= static_cast< VariableExpansionStreambuf * >( ios.pword( wrapperIndex ) );
+			std::cerr << "Release wrapper called on: " << &os << std::endl;
+			auto *const streambuf= static_cast< VariableExpansionStreambuf * >( os.pword( wrapperIndex ) );
 			if( not streambuf ) throw std::logic_error{ "Attempt to remove a substitution context which doesn't exist." };
 
+			AutoRAII current
+			{
+				[&] { return os.rdbuf( streambuf->underlying ); },
+				[&] ( std::streambuf *streambuf ) noexcept
+				{
+					std::cerr << "Deletion actually happening, now." << std::endl;
+					delete streambuf;
+					os.pword( wrapperIndex )= nullptr;
+				}
+			};
 			streambuf->drain();
-			dynamic_cast< std::ostream & >( ios ).rdbuf( streambuf->underlying );
-			delete streambuf;
-			ios.pword( wrapperIndex )= nullptr;
 		}
 
 		void
-		wordwrapCallback( const std::ios_base::event event, std::ios_base &ios, const int idx )
+		wordwrapCallback( const std::ios_base::event event, std::ios_base &ios, const int idx ) noexcept
 		{
+			std::cerr << "ios callback called on: " << &ios << std::endl;
 			if( wrapperIndex != idx ) throw std::logic_error{ "Wrong index." };
 
 			if( not ios.pword( wrapperIndex ) ) return;
 
-			if( event == std::ios_base::erase_event ) releaseWrapper( ios );
+
+			if( const auto os_p= dynamic_cast< std::ostream * >( &ios ); os_p and event == std::ios_base::erase_event )
+			{
+				releaseWrapper( *os_p );
+			}
 		}
 	}
 
@@ -121,6 +142,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 		{
 			state= 1;
 			os.register_callback( wordwrapCallback, wrapperIndex );
+			std::cerr << "Adding callback to " << (void *) static_cast< std::ios * >( &os ) << std::endl;
 		}
 
 		assert( os.pword( wrapperIndex ) == nullptr );

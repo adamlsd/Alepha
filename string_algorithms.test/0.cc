@@ -25,6 +25,11 @@ static auto init= enroll <=[]
 			{ "$H$ $W$", { { "H", lambaste<="Hello" }, { "W", lambaste<="World" } }, '$' },
 			"Hello World"
 		},
+		{
+			"Hello World (with some spaces)",
+			{ "$with space$ $can-expand$", { { "with space", lambaste<="Hello" }, { "can-expand", lambaste<="World" } }, '$' },
+			"Hello World"
+		},
 
 		{
 			"Hello $$ World",

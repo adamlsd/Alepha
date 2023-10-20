@@ -7,6 +7,8 @@ static_assert( __cplusplus > 2020'00 );
 #include <ostream>
 #include <exception>
 #include <stdexcept>
+#include <memory>
+#include <stack>
 
 namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 {
@@ -23,10 +25,16 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 
 	inline namespace impl
 	{
-		void releaseStack( std::ios_base &ios );
-		bool releaseTop( std::ostream &os );
-		
 		void iosCallback( const std::ios_base::event event, std::ios_base &ios, const int idx );
+	}
+
+	inline auto &
+	getStack( std::ios_base &ios )
+	{
+		auto &ownership= reinterpret_cast< std::stack< std::unique_ptr< StackableStreambuf > > *& >( ios.pword( index ) );
+		if( not ownership ) ownership= new std::decay_t< decltype( *ownership ) >{};
+
+		return *ownership;
 	}
 
 	struct exports::StackableStreambuf
@@ -35,7 +43,7 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 		public:
 			std::streambuf *underlying;
 
-			~StackableStreambuf() {}
+			~StackableStreambuf() override {}
 
 			// Children must be created by `new`.
 			explicit
@@ -45,9 +53,10 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 				// TODO: Atomicity for this:
 				if( not host.iword( index ) ) host.register_callback( iosCallback, index );
 				host.iword( index )= 1;
+				getStack( host ).emplace( this );
 			}
 
-			std::ostream out() const { return std::ostream{ underlying }; }
+			auto out() const { return std::ostream{ underlying }; }
 
 			virtual void writeChar( const char ch )= 0;
 			virtual void drain()= 0;
@@ -69,22 +78,36 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 			}
 	};
 
-	inline bool
-	impl::releaseTop( std::ostream &os )
-	{
-		auto *const streambuf= os.rdbuf();
-		if( not streambuf ) return false;
-		auto *const stacked= dynamic_cast< StackableStreambuf * >( streambuf );
-		if( not stacked ) return false;
+	enum { token };
 
-		stacked->drain();
-		os.rdbuf( stacked->underlying );
-		delete stacked;
+	inline bool
+	releaseTop( std::ios_base &ios, decltype( token )= token )
+	{
+		auto &ownership= getStack( ios );
+
+		// Since it's owned, delete happens at scope exit.
+		const std::unique_ptr top= std::move( ownership.top() );
+		ownership.pop();
+
+		top->drain();
+		return not ownership.empty();
+	}
+
+	inline bool
+	releaseTop( std::ostream &os )
+	{
+		const auto *const current= dynamic_cast< StackableStreambuf * >( os.rdbuf() );
+		if( not current ) return false;
+
+		os.rdbuf( current->underlying );
+
+		releaseTop( os, token );
+
 		return true;
 	}
 
 	inline void
-	impl::releaseStack( std::ios_base &ios )
+	releaseStack( std::ios_base &ios )
 	{
 		auto &os= dynamic_cast< std::ostream & >( ios );
 
@@ -94,9 +117,16 @@ namespace Alepha::Hydrogen::Utility  ::detail::  stackable_streambuf
 	inline void
 	impl::iosCallback( const std::ios_base::event event, std::ios_base &ios, const int idx )
 	{
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wterminate"
+
 		if( index != idx ) throw std::logic_error{ "Wrong index." };
 
 		if( event == std::ios_base::erase_event ) releaseStack( ios );
+		else if( event == std::ios_base::imbue_event ) {}
+		else if( event == std::ios_base::copyfmt_event ) throw std::runtime_error{ "Can't copy?" };
+
+		#pragma GCC diagnostic pop
 	}
 
 	template< typename T >

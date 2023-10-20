@@ -111,38 +111,6 @@ namespace Alepha::Cavorite  ::detail::  word_wrap
 		return rv;
 	}
 
-	namespace
-	{
-		const auto wrapperIndex= std::ios_base::xalloc();
-
-		void
-		releaseWrapper( std::ios_base &ios )
-		{
-			auto *const streambuf= static_cast< WordWrapStreambuf * >( ios.pword( wrapperIndex ) );
-			streambuf->drain();
-			dynamic_cast< std::ostream & >( ios ).rdbuf( streambuf->underlying );
-			delete streambuf;
-			ios.pword( wrapperIndex )= nullptr;
-		}
-
-		void
-		wordwrapCallback( const std::ios_base::event event, std::ios_base &ios, const int idx ) noexcept
-		{
-			#pragma GCC diagnostic push
-			#pragma GCC diagnostic ignored "-Wterminate"
-
-			if( wrapperIndex != idx ) throw std::logic_error( "Must only work with the word wrap index." );
-
-			if( not ios.pword( wrapperIndex ) ) return;
-
-			if( event == std::ios_base::erase_event ) releaseWrapper( ios );
-			else if( event == std::ios_base::imbue_event ) {}
-			else if( event == std::ios_base::copyfmt_event ) throw std::runtime_error{ "Can't copy?" };
-
-			#pragma GCC diagnostic pop
-		}
-	}
-
 	void
 	impl::build_streambuf( std::ostream &os, StartWrap &&args )
 	{
