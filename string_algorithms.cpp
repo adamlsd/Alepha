@@ -219,6 +219,7 @@ namespace Alepha::Cavorite  ::detail::  string_algorithms
 			rv.push_back( std::move( next ) );
 			next.clear();
 		}
+		rv.push_back( std::move( next ) );
 		return rv;
 	}
 }

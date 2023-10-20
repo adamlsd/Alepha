@@ -47,4 +47,11 @@ static auto init= enroll <=[]
 		}
 		catch( ... ) {}
 	};
+
+	"Does the `split` function handle simple cases correctly?"_test <=TableTest< Alepha::split >::Cases
+	{
+		{ "Empty string", { "", ':' }, { "" } },
+		{ "Single token", { "item", ':' }, { "item" } },
+		{ "Two tokens", { "first:second", ':' }, { "first", "second" } },
+	};
 };
