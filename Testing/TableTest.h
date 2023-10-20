@@ -4,6 +4,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Alepha.h>
 
+#include <cstdint>
+
 #include <tuple>
 #include <string>
 #include <iostream>
