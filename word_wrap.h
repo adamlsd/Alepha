@@ -25,7 +25,7 @@ namespace Alepha::inline Cavorite  ::detail::  word_wrap
 
 		using StartWrap= Utility::PushStack< StartWrap_params >;
 
-		constexpr Utility::PopStack< StartWrap_params > EndWrap;
+		constexpr Utility::PopStack EndWrap;
 	}
 
 	inline namespace impl
