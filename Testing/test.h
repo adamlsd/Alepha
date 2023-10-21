@@ -13,11 +13,13 @@ static_assert( __cplusplus > 2020'00 );
 #include <functional>
 #include <memory>
 
-#include <Alepha/console.h>
+#include <Alepha/Console.h>
 #include <Alepha/types.h>
 
 #include <Alepha/Utility/evaluation_helpers.h>
 #include <Alepha/Utility/StaticValue.h>
+
+#include "colors.h"
 
 namespace Alepha::Hydrogen::Testing
 {
@@ -33,7 +35,7 @@ namespace Alepha::Hydrogen::Testing
 			const bool debugTestRegistration= false or C::debug;
 			const bool debugTestRun= false or C::debug;
 
-			using namespace Alepha::Hydrogen::exports::C;
+			using namespace testing_colors::C::Colors;
 		}
 
 		using namespace std::literals::string_literals;
@@ -196,9 +198,9 @@ namespace Alepha::Hydrogen::Testing
 
 					if( explicitlyNamed( name ) or not disabled and selected( name ) )
 					{
-						std::cout << C::green << "BEGIN  " << C::normal << ": " << name << std::endl;
+						std::cout << C::testPass << "BEGIN  " << resetStyle << ": " << name << std::endl;
 						test();
-						std::cout << C::green << "SUCCESS" << C::normal << ": " << name << std::endl;
+						std::cout << C::testPass << "SUCCESS" << resetStyle << ": " << name << std::endl;
 					}
 				}
 				catch( ... )
@@ -206,7 +208,7 @@ namespace Alepha::Hydrogen::Testing
 					try
 					{
 						failed= true;
-						std::cout << C::red << "FAILURE" << C::normal << ": " << name;
+						std::cout << C::testFail << "FAILURE" << resetStyle << ": " << name;
 						throw;
 					}
 					catch( const TestFailureException &fail ) { std::cout << " -- " <<  fail.failureCount << " failures."; }

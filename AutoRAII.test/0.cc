@@ -13,7 +13,7 @@ main( const int argcnt, const char *const argvec[] )
 
 static auto tests= Alepha::Utility::enroll <=[]
 {
-	using namespace Alepha::exports::auto_raii;
+	using namespace Alepha::Hydrogen::exports::auto_raii;
 	using namespace Alepha::Testing::exports::literals;
 
 	using Alepha::Testing::exports::TestState;

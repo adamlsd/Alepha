@@ -32,13 +32,23 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/Utility/evaluation_helpers.h>
 
 #include <Alepha/TotalOrder.h>
-#include <Alepha/console.h>
+#include <Alepha/Console.h>
+
+#include "colors.h"
 
 namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 {
 	inline namespace exports
 	{
 		enum class OutputMode { All, Relaxed };
+	}
+
+	namespace C
+	{
+		inline namespace Colors
+		{
+			using namespace testing_colors::C::Colors;
+		}
 	}
 
 	template< typename F >
@@ -60,7 +70,6 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	{
 		const bool debug= false;
 		const bool debugCaseTypes= false or C::debug;
-		using namespace Alepha::console::C;
 	}
 
 	using std::begin, std::end;
@@ -260,11 +269,11 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 					const auto result= witness == expected;
 					if( not result )
 					{
-						std::cout << C::red << "  FAILURE" << C::normal << ": " << comment << std::endl;
+						std::cout << C::testFail << "  FAILURE" << resetStyle << ": " << comment << std::endl;
 						++failureCount;
 						printDebugging< outputMode >( witness, expected );
 					}
-					else std::cout << C::green << "  SUCCESS" << C::normal << ": " << comment << std::endl;
+					else std::cout << C::testPass << "  SUCCESS" << resetStyle << ": " << comment << std::endl;
 				}
 
 				return failureCount;

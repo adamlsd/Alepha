@@ -2,6 +2,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <Alepha/Alepha.h>
+
 #include <string>
 #include <memory>
 
@@ -14,7 +16,7 @@ static_assert( __cplusplus > 2020'00 );
 // As long as this works on most (all?) modern terminal emulators, this should be
 // fine.
 
-namespace Alepha::inline Cavorite  ::detail::  console
+namespace Alepha::Hydrogen  ::detail::  console
 {
 	inline namespace exports {}
 
@@ -30,11 +32,22 @@ namespace Alepha::inline Cavorite  ::detail::  console
 			std::string code;
 		};
 
-		inline auto
-		operator ""_sgr( const char *const p, const std::size_t sz )
+		[[nodiscard]] inline SGR_String
+		operator + ( const SGR_String lhs, const SGR_String rhs )
 		{
-			return SGR_String{ { p, p + sz } };
+			if( lhs.code.empty() ) return rhs;
+			if( rhs.code.empty() ) return lhs;
+			return SGR_String{ lhs.code + ';' + rhs.code };
 		}
+
+		inline SGR_String &
+		operator += ( SGR_String &lhs, const SGR_String rhs )
+		{
+			return lhs= lhs + rhs;
+		}
+
+		// Parses sgr token names, like "bold ext:red"
+		[[nodiscard]] SGR_String operator ""_sgr( const char *p, std::size_t sz );
 
 		enum class BasicTextColor : int;
 		enum class TextColor : int;
@@ -143,7 +156,17 @@ namespace Alepha::inline Cavorite  ::detail::  console
 	{
 		[[nodiscard]] SGR_String resetTextEffects();
 
+		// Non Colour effects (Mostly sorted by ANSI/ECMA SGR code numeric order)
+		[[nodiscard]] SGR_String setBold();
+		[[nodiscard]] SGR_String setFaint();
+		[[nodiscard]] SGR_String setItalic();
+		[[nodiscard]] SGR_String setUnderline();
 		[[nodiscard]] SGR_String setBlink();
+		[[nodiscard]] SGR_String setStrike();
+		[[nodiscard]] SGR_String setDoubleUnderline();
+		[[nodiscard]] SGR_String setFramed();
+		[[nodiscard]] SGR_String setEncircled();
+		[[nodiscard]] SGR_String setOverline();
 
 		[[nodiscard]] SGR_String setFgColor( BasicTextColor fg );
 		[[nodiscard]] SGR_String setBgColor( BasicTextColor bg );
@@ -152,6 +175,7 @@ namespace Alepha::inline Cavorite  ::detail::  console
 		[[nodiscard]] SGR_String setExtFgColor( TextColor fg );
 		[[nodiscard]] SGR_String setExtBgColor( TextColor fg );
 		[[nodiscard]] SGR_String setExtColor( TextColor fg, TextColor bg );
+		[[nodiscard]] SGR_String setExtUlColor( TextColor ul );
 
 		// Basic color wrapping aliases:
 		[[nodiscard]] inline SGR_String setExtFgColor( const BasicTextColor fg ) { return setExtFgColor( static_cast< TextColor >( fg ) ); }
@@ -167,13 +191,60 @@ namespace Alepha::inline Cavorite  ::detail::  console
 		[[nodiscard]] SGR_String setBgTrueColor( int rgb );
 		[[nodiscard]] SGR_String setBgTrueColor( int r, int g, int b );
 
+		[[nodiscard]] SGR_String setUlTrueColor( int rgb );
+		[[nodiscard]] SGR_String setUlTrueColor( int r, int g, int b );
+
 		void sendSGR( std::ostream &os, SGR_String );
 
 		int getConsoleWidth();
 	}
+
+	enum class exports::BasicTextColor : int
+	{
+		black= 0,
+		red= 1,
+		green= 2,
+		brown= 3,
+		blue= 4,
+		magenta= 5,
+		cyan= 6,
+		grey= 7,
+	};
+
+	enum class exports::TextColor : int
+	{
+		black= 0,
+		dim_red= 1,
+		dim_green= 2,
+		dim_brown= 3,
+		dim_blue= 4,
+		dim_magenta= 5,
+		dim_cyan= 6,
+		bright_grey= 7,
+
+		// Note that bright and dim grey are reverse, since bright grey is dim white and dim grey si bright black.
+		// The names are more understandable this way, I think
+
+		dim_grey= 8,
+		bright_red= 9,
+		bright_green= 10,
+		bright_brown= 11,
+		bright_blue= 12,
+		bright_magenta= 13,
+		bright_cyan= 14,
+		white= 15,
+
+		rgb_base= 16,
+		red_radix= 36,
+		green_radix= 6,
+		blue_radix= 0,
+
+		greyscale_base= 232, // Add N to this to get the greyscale offset.
+	};
+		
 }
 
-namespace Alepha::Cavorite::inline exports::inline console
+namespace Alepha::Hydrogen::inline exports::inline console
 {
 	using namespace detail::console::exports;
 }
