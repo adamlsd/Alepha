@@ -19,26 +19,61 @@ namespace Alepha::inline Cavorite  ::detail::  function_traits_module
 		using get_arg_t= std::decay_t< std::tuple_element_t< index, get_args_t< Function > > >;
 	}
 
+	struct nil;
+
+	template< bool noexceptness, typename ClassHolder, typename ReturnType, typename ... Args >
+	struct traits : traits< noexceptness, nil, ReturnType, Args... >
+	{
+		using member_type= ReturnType (ClassHolder::*)( Args... );
+		using const_member_type= ReturnType (ClassHolder::*)( Args... ) const;
+	};
+
+	template< bool noexceptness, typename ReturnType, typename ... Args >
+	struct traits< noexceptness, nil, ReturnType, Args... >
+	{
+		static constexpr bool noexcepted= noexceptness;
+
+		using function_type= std::function< ReturnType ( Args... ) noexcept( noexcepted ) >;
+
+		using member_type= nil;
+		using const_member_type= nil;
+
+		using args_type= std::tuple< Args... >;
+		static constexpr std::size_t args_size= sizeof...( Args );
+
+		using return_type= ReturnType;
+		using signature_type= ReturnType( Args... );
+	};
+		
+
 	// General catchall...
 	template< typename Function >
 	struct exports::function_traits
 		: exports::function_traits< std::decay_t< decltype( std::function( std::declval< Function >() ) ) > >
 	{};
 
-	template< typename Result, typename ... Args, bool noexceptness >
-	struct exports::function_traits< std::function< Result ( Args... ) noexcept( noexceptness ) > >
-	{
-		static constexpr bool noexcepted= noexceptness;
-		using function_type= std::function< Result ( Args... ) noexcept( noexceptness ) >;
-		using member_type= std::false_type;
-		using const_member_type= std::false_type;
 
-		using args_type= std::tuple< Args... >;
-		static constexpr std::size_t args_size= sizeof...( Args );
+	template< typename ReturnType, typename ... Args, bool noexceptness >
+	struct exports::function_traits< ReturnType ( Args... ) noexcept( noexceptness ) >
+		: traits< noexceptness, nil, ReturnType, Args... >
+	{};
 
-		using return_type= Result;
-		using signature_type= Result( Args... );
-	};
+	template< typename ReturnType, typename ... Args, bool noexceptness >
+	struct exports::function_traits< ReturnType (*)( Args... ) noexcept( noexceptness ) >
+		: traits< noexceptness, nil, ReturnType, Args... >
+	{};
+
+	template< typename ReturnType, typename ... Args, bool noexceptness >
+	struct exports::function_traits< ReturnType (&)( Args... ) noexcept( noexceptness ) >
+		: traits< noexceptness, nil, ReturnType, Args... >
+	{};
+
+
+	// The `std::function` form...  It also is the catchall for other types...
+	template< typename ReturnType, typename ... Args, bool noexceptness >
+	struct exports::function_traits< std::function< ReturnType ( Args... ) noexcept( noexceptness ) > >
+		: traits< noexceptness, nil, ReturnType, Args... >
+	{};
 }
 
 namespace Alepha::Cavorite::inline exports::inline function_traits_module
