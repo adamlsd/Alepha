@@ -12,9 +12,9 @@ static_assert( __cplusplus > 2020'00 );
 #include <string_view>
 #include <typeindex>
 
-namespace Alepha::Hydrogen
+namespace Alepha::Hydrogen  ::detail::  exceptions
 {
-	namespace detail::exceptions::inline exports
+	inline namespace exports
 	{
 		/*!
 		 * @file
@@ -540,10 +540,9 @@ namespace Alepha::Hydrogen
 		using AnyTaggedFinishedCondition= AnyTagged< FinishedCondition >;
 		template< typename tag > using TaggedFinishedCondition= Tagged< FinishedCondition, tag >;
 	}
+}
 
-	inline namespace exports {}
-	namespace exports::inline exceptions
-	{
-		using namespace detail::exceptions::exports;
-	}
+namespace Alepha::Hydrogen::inline exports::inline exceptions
+{
+	using namespace detail::exceptions::exports;
 }
