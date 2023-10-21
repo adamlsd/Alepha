@@ -9,7 +9,7 @@ static_assert( __cplusplus > 2020'00 );
 #include "error.h"
 #include "AutoRAII.h"
 
-namespace Alepha::Cavorite  ::detail::  string_algorithms
+namespace Alepha::Hydrogen  ::detail::  string_algorithms
 {
 	namespace
 	{

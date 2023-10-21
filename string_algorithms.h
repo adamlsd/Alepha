@@ -18,7 +18,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Concepts.h>
 
-namespace Alepha::inline Cavorite  ::detail::  string_algorithms
+namespace Alepha::Hydrogen  ::detail::  string_algorithms
 {
 	inline namespace exports {}
 
@@ -99,7 +99,7 @@ namespace Alepha::inline Cavorite  ::detail::  string_algorithms
 	}
 }
 
-namespace Alepha::Cavorite::inline exports::inline string_algorithms
+namespace Alepha::Hydrogen::inline exports::inline string_algorithms
 {
 	using namespace detail::string_algorithms::exports;
 }
