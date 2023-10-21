@@ -18,6 +18,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Concepts.h>
 
+#include <Alepha/Utility/StackableStreambuf.h>
+
 namespace Alepha::Hydrogen  ::detail::  string_algorithms
 {
 	inline namespace exports {}
@@ -38,26 +40,26 @@ namespace Alepha::Hydrogen  ::detail::  string_algorithms
 		 */
 		std::string expandVariables( const std::string &text, const VarMap &vars, const char sigil );
 
-		struct StartSubstitutions
+		struct StartSubstitutions_params
 		{
 			const char sigil;
 			VarMap substitutions;
 
 			explicit
-			StartSubstitutions( const char sigil, VarMap substitutions )
+			StartSubstitutions_params( const char sigil, VarMap substitutions )
 					: sigil( sigil ), substitutions( std::move( substitutions ) )
 			{}
 		};
 
+		using StartSubstitutions= Utility::PushStack< StartSubstitutions_params >;
+
 		// Note that these function as a stack -- so `EndSubstitutions` will
 		// terminate the top of that stack.
-		constexpr struct EndSubstitutions_t {} EndSubstitutions;
+		constexpr Utility::PopStack EndSubstitutions;
 
 		inline namespace impl
 		{
-			std::ostream &operator << ( std::ostream &, StartSubstitutions && );
-
-			std::ostream &operator << ( std::ostream &, EndSubstitutions_t );
+			void build_streambuf( std::ostream &, StartSubstitutions && );
 		}
 
 		/*!

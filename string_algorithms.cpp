@@ -22,18 +22,22 @@ namespace Alepha::Hydrogen  ::detail::  string_algorithms
 		}
 
 		struct VariableExpansionStreambuf
-			: public std::streambuf
+			: public Utility::StackableStreambuf
 		{
 			public:
-				std::streambuf *underlying= nullptr;
 				VarMap substitutions;
 				std::stringbuf varName;
 				char sigil;
 				enum { Symbol= 1, Normal= 0 } mode= Normal;
 				int throws= 0;
 
+				explicit
+				VariableExpansionStreambuf( std::ostream &os, VarMap &&substitutions, const char sigil )
+					: StackableStreambuf( os ), substitutions( std::move( substitutions ) ), sigil( sigil )
+				{}
+
 				void
-				writeChar( const char ch )
+				writeChar( const char ch ) override
 				{
 					std::ostream current{ underlying };
 
@@ -64,22 +68,6 @@ namespace Alepha::Hydrogen  ::detail::  string_algorithms
 					current << ch;
 				}
 
-				int
-				overflow( const int ch ) override
-				{
-					if( ch == EOF ) throw std::logic_error{ "EOF!" };
-					writeChar( ch );
-
-					return 1;
-				}
-
-				std::streamsize
-				xsputn( const char *const data, const std::streamsize amt ) override
-				{
-					for( std::streamsize i= 0; i< amt; ++i ) overflow( data[ i ] );
-					return amt;
-				}
-
 				void
 				drain()
 				{
@@ -92,71 +80,12 @@ namespace Alepha::Hydrogen  ::detail::  string_algorithms
 					}
 				}
 		};
-
-		const auto wrapperIndex= std::ios::xalloc();
-
-		void
-		releaseWrapper( std::ostream &os )
-		{
-			if( C::debugIOStreamLifecycle ) error() << "Release wrapper called on: " << &os << std::endl;
-			auto *const streambuf= static_cast< VariableExpansionStreambuf * >( os.pword( wrapperIndex ) );
-			if( not streambuf ) throw std::logic_error{ "Attempt to remove a substitution context which doesn't exist." };
-
-			AutoRAII current
-			{
-				[&] { return os.rdbuf( streambuf->underlying ); },
-				[&] ( std::streambuf *streambuf ) noexcept
-				{
-					if( C::debugIOStreamLifecycle ) error() << "Deletion actually happening, now." << std::endl;
-					delete streambuf;
-					os.pword( wrapperIndex )= nullptr;
-				}
-			};
-			streambuf->drain();
-		}
-
-		void
-		wordwrapCallback( const std::ios_base::event event, std::ios_base &ios, const int idx ) noexcept
-		{
-			if( C::debugIOStreamLifecycle ) error() << "ios callback called on: " << &ios << std::endl;
-			if( wrapperIndex != idx ) throw std::logic_error{ "Wrong index." };
-
-			if( not ios.pword( wrapperIndex ) ) return;
-
-
-			if( const auto os_p= dynamic_cast< std::ostream * >( &ios ); os_p and event == std::ios_base::erase_event )
-			{
-				releaseWrapper( *os_p );
-			}
-		}
 	}
 
-	std::ostream &
-	impl::operator << ( std::ostream &os, StartSubstitutions &&params )
+	void
+	impl::build_streambuf( std::ostream &os, StartSubstitutions &&params )
 	{
-		auto streambuf= std::make_unique< VariableExpansionStreambuf >();
-		streambuf->underlying= os.rdbuf( streambuf.get() );
-		streambuf->substitutions= std::move( params.substitutions );
-		streambuf->sigil= params.sigil;
-		auto &state= os.iword( wrapperIndex );
-		if( not state )
-		{
-			state= 1;
-			os.register_callback( wordwrapCallback, wrapperIndex );
-			if( C::debugIOStreamLifecycle ) error() << "Adding callback to " << (void *) static_cast< std::ios * >( &os ) << std::endl;
-		}
-
-		assert( os.pword( wrapperIndex ) == nullptr );
-		os.pword( wrapperIndex )= streambuf.release();
-
-		return os;
-	}
-
-	std::ostream &
-	impl::operator << ( std::ostream &os, EndSubstitutions_t )
-	{
-		releaseWrapper( os );
-		return os;
+		new VariableExpansionStreambuf{ os, std::move( params.substitutions ), params.sigil };
 	}
 
 	std::string
