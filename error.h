@@ -2,10 +2,12 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <Alepha/Alepha.h>
+
 #include <iostream>
 #include <mutex>
 
-namespace Alepha::inline Cavorite  ::detail::  error_stream
+namespace Alepha::Hydrogen  ::detail::  error_stream
 {
 	inline namespace exports {}
 
@@ -57,7 +59,7 @@ namespace Alepha::inline Cavorite  ::detail::  error_stream
 	}
 }
 
-namespace Alepha::Cavorite::inline exports::inline error_stream
+namespace Alepha::Hydrogen::inline exports::inline error_stream
 {
 	using namespace detail::error_stream::exports;
 }
