@@ -2,6 +2,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <Alepha/Alepha.h>
+
 #include <cstddef>
 
 #include <string>
@@ -9,7 +11,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Utility/StackableStreambuf.h>
 
-namespace Alepha::inline Cavorite  ::detail::  word_wrap
+namespace Alepha::Hydrogen  ::detail::  word_wrap
 {
 	inline namespace exports
 	{
@@ -34,7 +36,7 @@ namespace Alepha::inline Cavorite  ::detail::  word_wrap
 	}
 }
 
-namespace Alepha::Cavorite::inline exports::inline word_wrap
+namespace Alepha::Hydrogen::inline exports::inline word_wrap
 {
 	using namespace detail::word_wrap::exports;
 }
