@@ -2,6 +2,7 @@
 
 add_compile_options( -std=c++20 )
 add_compile_options( -fdiagnostics-column-unit=byte )
+add_compile_options( -fconcepts-diagnostics-depth=0 )
 include_directories( ${CMAKE_BINARY_DIR} . )
 
 
