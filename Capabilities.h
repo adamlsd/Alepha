@@ -94,7 +94,7 @@ namespace Alepha::Hydrogen
 		}
 
 		template< typename Cap, template< typename ... > class Class, typename ... TParams >
-		constexpr bool
+		consteval bool
 		has_cap( const Meta::type_value< Class< TParams... > > &, Meta::type_value< Cap > cap )
 		{
 			return has_cap( Meta::Container::vector< TParams... >{}, cap );
@@ -112,7 +112,19 @@ namespace Alepha::Hydrogen
 			struct has_capability_s : std::bool_constant< has_capability_v< T, cap > > {};
 
 			inline constexpr Meta::trait< has_capability_s > has_capability;
+
+			template< typename T, typename capability >
+			concept Capability= has_capability_v< T, capability >;
 		}
+
+		struct capability_demo {};
+		struct missing_capability_demo {};
+		template< typename= Capabilities< capability_demo > >
+		struct Capable_base {};
+		using Capable= Capable_base<>;
+		static_assert( Capability< Capable, capability_demo > == true );
+		static_assert( Capability< Capable, missing_capability_demo > == false );
+		template< Capability< missing_capability_demo > C > void f( C ) {}
 	}
 
 	namespace exports::capabilities
