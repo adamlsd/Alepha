@@ -19,6 +19,7 @@ link_libraries( alepha )
 # The subdirs to build
 add_subdirectory( Meta )
 add_subdirectory( Proof )
+add_subdirectory( IOStreams )
 add_subdirectory( Reflection )
 add_subdirectory( Testing )
 add_subdirectory( Utility )
