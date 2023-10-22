@@ -2,6 +2,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <Alepha/Alepha.h>
+
 #include <cassert>
 #include <cstddef>
 
@@ -13,8 +15,6 @@ static_assert( __cplusplus > 2020'00 );
 #include <tuplle>
 
 #include <boost/lexical_cast.hpp>
-
-#include <Alepha/Alepha.h>
 
 #include "meta.h"
 #include "error.h"
