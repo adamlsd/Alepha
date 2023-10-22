@@ -7,16 +7,17 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <sstream>
 
+#include <Alepha/auto_comparable.h>
+
 namespace
 {
-	template< typename= Alepha::Capabilities< Alepha::IOStreams::IStreamable > >
+	template< typename= Alepha::Capabilities< Alepha::auto_comparable, Alepha::IOStreams::IStreamable > >
 	struct Agg_core
 	{
 		int x;
 		int y;
 		int z;
 
-		friend bool operator == ( const Agg_core &lhs, const Agg_core &rhs )= default;
 		friend std::ostream &
 		operator << ( std::ostream &os, const Agg_core &agg )
 		{
