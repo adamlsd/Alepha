@@ -9,25 +9,22 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/auto_comparable.h>
 
+#include <Alepha/IOStreams/OStreamable.h>
+
 namespace
 {
-	template< typename= Alepha::Capabilities< Alepha::auto_comparable, Alepha::IOStreams::IStreamable > >
+	template< typename= Alepha::Capabilities< Alepha::auto_comparable, Alepha::IOStreams::IStreamable, Alepha::IOStreams::OStreamable > >
 	struct Agg_core
 	{
 		int x;
 		int y;
 		int z;
-
-		friend std::ostream &
-		operator << ( std::ostream &os, const Agg_core &agg )
-		{
-			return os << "{ " << agg.x << ", " << agg.y << ", " << agg.z << " }";
-		}
 	};
 
 	using Agg= Agg_core<>;
 	static_assert( Alepha::Aggregate< Agg > );
 	static_assert( Alepha::Capability< Agg, Alepha::IOStreams::IStreamable > );
+	static_assert( Alepha::Capability< Agg, Alepha::IOStreams::OStreamable > );
 }
 
 

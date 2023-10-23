@@ -65,7 +65,7 @@ namespace Alepha::Hydrogen
 		struct higher_kind_tuple {};
 
 		template< typename Cap, typename ... Caps >
-		constexpr bool
+		consteval bool
 		has_cap_in_capability_base( const Meta::type_value< Capabilities< Caps... > > &, Meta::type_value< Cap > cap )
 		{
 			Meta::Container::vector< Caps... > types;
@@ -81,7 +81,7 @@ namespace Alepha::Hydrogen
 		}
 
 		template< typename Cap, typename ... TParams >
-		constexpr bool
+		consteval bool
 		has_cap( const Meta::Container::vector< TParams... > &types, Meta::type_value< Cap > cap )
 		{
 			bool rv= 0;
