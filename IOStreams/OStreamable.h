@@ -13,6 +13,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Reflection/tuplizeAggregate.h>
 
+#include <Alepha/IOStreams/delimiters.h>
+
 namespace Alepha::Hydrogen::IOStreams  ::detail::  ostreamable_module
 {
 	inline namespace exports
@@ -43,11 +45,10 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  ostreamable_module
 		// aggregates, so we'll go with this simple case for now...
 		tuple_for_each( decomposed ) <=[&]( const auto &element )
 		{
-			if( not first ) os << '\t';
+			if( not first ) os << FieldDelimiter;
 			first= false;
 			os << element;
 		};
-		os << '\n';
 
 		return os;
 	}
