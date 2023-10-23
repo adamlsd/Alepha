@@ -38,14 +38,16 @@ static auto init= enroll <=[]
 		},
 	};
 
-	"An exception should be thrown when there is a trailing unenclosed variable."_test <=[]
+	"An exception should be thrown when there is a trailing unenclosed variable."_test <=TableTest< Alepha::expandVariables >::ExceptionCases
 	{
-		try
-		{
-			Alepha::expandVariables( "$H$ $W", { { "H", lambaste<="Hello" }, { "W", lambaste<="World" } }, '$' );
-			abort();
-		}
-		catch( ... ) {}
+		{ "Complete var",
+			{ "$H$ $W$", { { "H", lambaste<="Hello" }, { "W", lambaste<="World" } }, '$' },
+			{}
+		},
+		{ "Incomplete var",
+			{ "$H$ $W", { { "H", lambaste<="Hello" }, { "W", lambaste<="World" } }, '$' },
+			std::type_identity< std::exception >{} 
+		},
 	};
 
 	"Does the `split` function handle simple cases correctly?"_test <=TableTest< Alepha::split >::Cases

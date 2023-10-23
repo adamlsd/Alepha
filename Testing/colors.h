@@ -12,6 +12,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  testing_colors
 		{
 			inline const auto testFail= createStyle( "test-failure", setFgColor( BasicTextColor::red ) );
 			inline const auto testPass= createStyle( "test-success", setFgColor( BasicTextColor::green ) );
+			inline const auto testInfo= createStyle( "test-info", "italic ansi:5"_sgr );
 		}
 	}
 }

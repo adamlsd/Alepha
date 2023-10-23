@@ -280,7 +280,118 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			}
 		};
 
-		//struct VectorCases;
+		struct ExceptionCases
+		{
+			using Invoker= std::function< void () >;
+			struct ExceptionHandler
+			{
+				std::function< bool ( Invoker ) > impl;
+
+				bool operator() ( Invoker invoker ) const { return impl( invoker ); }
+
+				ExceptionHandler() : impl
+				{
+					[]( Invoker invoker )
+					{
+						try
+						{
+							invoker();
+							return true;
+						}
+						catch( ... ) { return false; }
+					}
+				}
+				{}
+
+				template< typename T >
+				ExceptionHandler( std::type_identity< T > ) : impl
+				{
+					[]( Invoker invoker )
+					{
+						try
+						{
+							invoker();
+							return false;
+						}
+						catch( const T & ) { return true; }
+					}
+				}
+				{}
+
+				template< typename T >
+				ExceptionHandler( const T exemplar ) : impl
+				{
+					[expected= std::string{ exemplar.what() }]( Invoker invoker )
+					{
+						try
+						{
+							invoker();
+							std::cerr << "  " << C::testInfo << "NOTE" << resetStyle << ": expected exception `"<< typeid( T ).name()
+									<< "` wasn't thrown." << std::endl;
+							return false;
+						}
+						catch( const T &ex )
+						{
+							const std::string witness= ex.what();
+							const bool rv= witness == expected;
+							if( not rv )
+							{
+								std::cerr << "  " << C::testInfo << "NOTE" << resetStyle << ": expected exception `"<< typeid( T ).name()
+										<< "` wasn't thrown." << std::endl;
+								printDebugging< outputMode >( witness, expected );
+							}
+							return rv;
+						}
+					}
+				}
+				{}
+
+				// This checker is invoked during `catch( ... )`
+				ExceptionHandler( const std::function< bool () > checker ) : impl
+				{
+					[=]( Invoker invoker )
+					{
+						try
+						{
+							invoker();
+							return false;
+						}
+						catch( ... ) { checker(); } // The `checker` can use `throw` to run any complex checks it needs.
+					}
+				}
+				{}
+			};
+
+			using TestDescription= std::tuple< std::string, args_type, ExceptionHandler >;
+
+			std::vector< TestDescription > tests;
+
+
+			explicit
+			ExceptionCases( std::initializer_list< TestDescription > initList )
+				: tests( initList ) {}
+
+			int
+			operator() () const
+			{
+				int failureCount= 0;
+				for( const auto &[ comment, params, checker ]: tests )
+				{
+					if( C::debugCaseTypes ) std::cerr << boost::core::demangle( typeid( params ).name() ) << std::endl;
+					breakpoint();
+					auto invoker= [&]{ std::apply( function, params ); };
+					const auto result= checker( invoker );
+					if( not result )
+					{
+						std::cout << "  " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+						++failureCount;
+					}
+					else std::cout << "  " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+				}
+
+				return failureCount;
+			}
+		};
 	};
 
 #ifdef DISABLED
@@ -295,7 +406,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				std::vector< std::pair< typename std::tuple_element_t< 0, std::tuple< Args... > >::value_type, typename RetVal::value_type > > >;
 
 		std::vector< TestDescription > tests;
-		
+
 		explicit
 		VectorCases( std::initializer_list< TestDescription > initList )
 			: tests( initList ) {}
