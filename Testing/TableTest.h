@@ -269,11 +269,11 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 					const auto result= witness == expected;
 					if( not result )
 					{
-						std::cout << C::testFail << "  FAILURE" << resetStyle << ": " << comment << std::endl;
+						std::cout << "  " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
 						++failureCount;
 						printDebugging< outputMode >( witness, expected );
 					}
-					else std::cout << C::testPass << "  SUCCESS" << resetStyle << ": " << comment << std::endl;
+					else std::cout << "  " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 				}
 
 				return failureCount;
