@@ -11,12 +11,6 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <cassert>
 
-int
-main( const int argcnt, const char *const *const argvec )
-{
-	return Alepha::Testing::runAllTests( argcnt, argvec );
-}
-
 namespace
 {
 	using namespace Alepha::Utility::exports::evaluation_helpers;

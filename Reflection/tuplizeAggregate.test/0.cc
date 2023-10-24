@@ -8,12 +8,6 @@ static_assert( __cplusplus > 2020'00 );
 
 using Alepha::argcnt_t, Alepha::argvec_t;
 
-int
-main( const argcnt_t argcnt, const argvec_t argvec )
-{
-	return Alepha::Testing::runAllTests( argcnt, argvec );
-}
-
 namespace
 {
 	using namespace Alepha::Testing::literals;

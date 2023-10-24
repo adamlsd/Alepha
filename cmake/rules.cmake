@@ -30,6 +30,7 @@ set( FULL_TEST_NAME ${TEST_DOMAIN}.${TEST_NAME} )
 
 add_executable( ${FULL_TEST_NAME} ${TEST_NAME}.cc )
 add_test( ${FULL_TEST_NAME} ${FULL_TEST_NAME} )
+target_link_libraries( ${FULL_TEST_NAME} unit-test )
 
 endfunction( unit_test )
 

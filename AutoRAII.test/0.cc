@@ -5,12 +5,6 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/Testing/test.h>
 #include <Alepha/Utility/evaluation_helpers.h>
 
-int
-main( const int argcnt, const char *const argvec[] )
-{
-	return Alepha::Testing::runAllTests( argcnt, argvec );
-}
-
 static auto tests= Alepha::Utility::enroll <=[]
 {
 	using namespace Alepha::Hydrogen::exports::auto_raii;

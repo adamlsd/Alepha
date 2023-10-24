@@ -92,9 +92,3 @@ namespace
 		thread2.join();
 	};
 }
-
-int
-main( const int argcnt, const char *const *const argvec )
-{
-	return runAllTests( { argvec + 1, argvec + argcnt } );
-}

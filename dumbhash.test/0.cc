@@ -351,9 +351,3 @@ namespace
 		}
 	}
 }
-
-int
-main( const argcnt_t argcnt, const argvec_t argvec )
-{
-	return runAllTests( argcnt, argvec );
-}

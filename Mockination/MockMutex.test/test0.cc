@@ -156,9 +156,3 @@ namespace
 		assert( mtx.getWaiters().size() == 0 );
 	};
 }
-
-int
-main( const int argcnt, const char *const *const argvec )
-{
-	return runAllTests( { argvec + 1, argvec + argcnt } );
-}

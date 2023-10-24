@@ -12,16 +12,7 @@ namespace
 {
 	using Alepha::Hydrogen::exports::types::argcnt_t;
 	using Alepha::Hydrogen::exports::types::argvec_t;
-}
 
-int
-main( const argcnt_t argcnt, const argvec_t argvec )
-{
-	return Alepha::Testing::runAllTests( argcnt, argvec );
-}
-
-namespace
-{
 	namespace util= Alepha::Utility;
 	using namespace Alepha::Testing::exports;
 	namespace boost= Alepha::boost;

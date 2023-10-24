@@ -10,16 +10,7 @@ namespace
 {
 	using Alepha::Hydrogen::exports::types::argcnt_t;
 	using Alepha::Hydrogen::exports::types::argvec_t;
-}
 
-int
-main( const argcnt_t argcnt, const argvec_t argvec )
-{
-	return Alepha::Testing::runAllTests( argcnt, argvec );
-}
-
-namespace
-{
 	using namespace Alepha::Testing::exports;
 	using namespace Alepha::Hydrogen::exports::comparisons;
 	using namespace Alepha::Hydrogen::exports::capabilities;

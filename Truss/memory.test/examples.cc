@@ -1,11 +1,6 @@
 #include <Alepha/Atomic/Turnstile.h>
 using Alepha::Atomic::Turnstile;
 
-int
-main()
-{
-}
-
 namespace
 {
 namespace example1

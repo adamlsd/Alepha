@@ -1,5 +1,7 @@
 #include "../Attestation.h"
 
+#include <Alepha/Testing/test.h>
+
 #include <cstddef>
 #include <cstdlib>
 #include <algorithm>
@@ -11,8 +13,11 @@
 
 #include <iostream>
 
+
 namespace
 {
+	using namespace Alepha::Testing::literals::test_literals;
+
 	struct Tester;
 	struct foobar_tag { using averant= Tester; };
 
@@ -145,8 +150,7 @@ namespace
 }
 
 
-int
-main()
+auto simpleTest= "Simple attestation test"_test <=[]
 {
 	Tester::test();
 	//attest( FoobarFact::permission );
@@ -182,8 +186,7 @@ main()
 	checker( lk );
 
 	auto myInt= makeUnique< int >();
-	return EXIT_SUCCESS;
-}
+};
 
 
 

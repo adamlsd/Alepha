@@ -5,13 +5,6 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/Utility/evaluation_helpers.h>
 
 
-int
-main( const int argcnt, const char *const *const argvec )
-{
-	return Alepha::Testing::runAllTests( argcnt, argvec );
-}
-
-
 namespace
 {
 	using namespace Alepha::Testing::exports;

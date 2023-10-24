@@ -7,16 +7,7 @@ static_assert( __cplusplus > 2020'00 );
 namespace
 {
 	namespace UnitTest= Alepha::Testing::exports;
-}
 
-int
-main( const int argcnt, const char *const *const argvec )
-{
-	return UnitTest::runAllTests( argcnt, argvec );
-}
-
-namespace
-{
 	using namespace Alepha::Utility::exports::evaluation_helpers;
 	using namespace UnitTest::literals;
 	using UnitTest::TableTest;
