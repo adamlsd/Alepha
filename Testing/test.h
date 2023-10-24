@@ -192,28 +192,32 @@ namespace Alepha::Hydrogen::Testing
 				};
 
 				for( const auto &[ name, disabled, test ]: registry() )
-				try
 				{
 					if( C::debugTestRun ) std::cerr << "Trying test " << name << std::endl;
 
 					if( explicitlyNamed( name ) or not disabled and selected( name ) )
 					{
-						std::cout << C::testPass << "BEGIN  " << resetStyle << ": " << name << std::endl;
-						test();
-						std::cout << C::testPass << "SUCCESS" << resetStyle << ": " << name << std::endl;
+						std::cout << C::testInfo << "BEGIN" << resetStyle << "   : " << name << std::endl;
+						try
+						{
+							test();
+							std::cout << "  " << C::testPass << "SUCCESS" << resetStyle << ": " << name << std::endl;
+						}
+						catch( ... )
+						{
+							try
+							{
+								failed= true;
+								std::cout << "  " << C::testFail << "FAILURE" << resetStyle << ": " << name;
+								throw;
+							}
+							catch( const TestFailureException &fail ) { std::cout << " -- " <<  fail.failureCount << " failures."; }
+							catch( ... ) { std::cout << " --  unknown failure count"; }
+							std::cout << std::endl;
+						}
+
+						std::cout << C::testInfo << "FINISHED" << resetStyle << ": " << name << std::endl;
 					}
-				}
-				catch( ... )
-				{
-					try
-					{
-						failed= true;
-						std::cout << C::testFail << "FAILURE" << resetStyle << ": " << name;
-						throw;
-					}
-					catch( const TestFailureException &fail ) { std::cout << " -- " <<  fail.failureCount << " failures."; }
-					catch( ... ) { std::cout << " --  unknown failure count"; }
-					std::cout << std::endl;
 				}
 				
 				return failed ? EXIT_FAILURE : EXIT_SUCCESS;

@@ -383,10 +383,10 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 					const auto result= checker( invoker );
 					if( not result )
 					{
-						std::cout << "  " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+						std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
 						++failureCount;
 					}
-					else std::cout << "  " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+					else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 				}
 
 				return failureCount;
