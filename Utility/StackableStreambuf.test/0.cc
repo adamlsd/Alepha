@@ -8,7 +8,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/Testing/TableTest.h>
 #include <Alepha/Utility/evaluation_helpers.h>
 
-#include "../word_wrap.h"
+#include <Alepha/word_wrap.h>
 
 namespace
 {
