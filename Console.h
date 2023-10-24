@@ -237,7 +237,7 @@ namespace Alepha::Hydrogen  ::detail::  console
 		rgb_base= 16,
 		red_radix= 36,
 		green_radix= 6,
-		blue_radix= 0,
+		blue_radix= 1,
 
 		greyscale_base= 232, // Add N to this to get the greyscale offset.
 	};

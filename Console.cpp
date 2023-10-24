@@ -168,8 +168,11 @@ namespace Alepha::Hydrogen  ::detail::  console
 				const int r= boost::lexical_cast< int >( rgb.substr( 0, 1 ) );
 				const int g= boost::lexical_cast< int >( rgb.substr( 1, 1 ) );
 				const int b= boost::lexical_cast< int >( rgb.substr( 2, 1 ) );
+				if( r < 0 or r > 5 ) throw std::runtime_error( "ext:rgb requested red value `" + rgb.substr( 0, 1 ) + "` out of range [0,5]" );
+				if( g < 0 or g > 5 ) throw std::runtime_error( "ext:rgb requested green value `" + rgb.substr( 1, 1 ) + "` out of range [0,5]" );
+				if( b < 0 or b > 5 ) throw std::runtime_error( "ext:rgb requested blue value `" + rgb.substr( 2, 1 ) + "` out of range [0,5]" );
 				std::ostringstream oss;
-				oss <<  "3;5;";
+				oss <<  "38;5;";
 				oss << int( TextColor::rgb_base ) + r * int( TextColor::red_radix ) + g * int( TextColor::green_radix ) + b * int( TextColor::blue_radix );
 				return { std::move( oss ).str() };
 			}
