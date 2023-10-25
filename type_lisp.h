@@ -83,6 +83,36 @@ namespace Alepha::Hydrogen  ::detail::  type_lisp
 		template< typename Element >
 		constexpr bool list_contains_v< Nil, Element >{};
 	}
+
+	template< typename Element, typename List >
+	struct cons;
+
+	template< typename Element, typename ... Members >
+	struct cons< Element, TypeList< Members... > >
+	{
+		using type= TypeList< Element, Members... >;
+	};
+
+	namespace exports
+	{
+		template< typename Element, typename List >
+		using cons_t= typename cons< Element, List >::type;
+	}
+
+	template< typename Tuple >
+	struct list_from_tuple;
+
+	namespace exports
+	{
+		template< typename Tuple >
+		using list_from_tuple_t= typename list_from_tuple< Tuple >::type;
+	}
+
+	template< typename ... Members >
+	struct list_from_tuple< std::tuple< Members... > >
+	{
+		using type= TypeList< Members... >;
+	};
 }
 
 namespace Alepha::Hydrogen::inline exports::inline type_lisp
