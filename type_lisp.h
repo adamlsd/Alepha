@@ -4,7 +4,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <type_traits>
 
-namespace Alepha::inline Cavorite  ::detail::  type_lisp
+namespace Alepha::Hydrogen  ::detail::  type_lisp
 {
 	inline namespace exports {}
 
@@ -85,7 +85,7 @@ namespace Alepha::inline Cavorite  ::detail::  type_lisp
 	}
 }
 
-namespace Alepha::Cavorite::inline exports::inline type_lisp
+namespace Alepha::Hydrogen::inline exports::inline type_lisp
 {
 	using namespace detail::type_lisp::exports;
 }
