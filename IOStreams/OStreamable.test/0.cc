@@ -27,7 +27,7 @@ namespace
 
 
 	auto
-	stringify( const Agg &agg, const char delim )
+	stringify( const Agg &agg, const std::string delim )
 	{
 		std::ostringstream oss;
 		oss << Alepha::IOStreams::setFieldDelimiter( delim );
@@ -44,7 +44,9 @@ static auto init= Alepha::Utility::enroll <=[]
 	"Simple OStream"_test <=TableTest< stringify >
 	::Cases
 	{
-		{ "smoke test", { { 1, 2, 3 }, '\t' }, { "1\t2\t3" } },
-		{ "smoke test", { { 1, 2, 3 }, ',' }, { "1,2,3" } },
+		{ "smoke test", { { 1, 2, 3 }, "\t" }, { "1\t2\t3" } },
+		{ "smoke test", { { 1, 2, 3 }, "," }, { "1,2,3" } },
+		{ "smoke test", { { 1, 2, 3 }, ";;" }, { "1;;2;;3" } },
+		{ "smoke test", { { 1, 2, 3 }, ", " }, { "1, 2, 3" } },
 	};
 };

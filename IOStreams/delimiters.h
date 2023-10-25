@@ -10,6 +10,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/StaticValue.h>
 
+#include <Alepha/IOStreams/StreamState.h>
+
 namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
 {
 	inline namespace exports
@@ -18,19 +20,21 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
 		enum { RecordDelimiter };
 	}
 
+	using FieldDelimiterState= StreamState< decltype( FieldDelimiter ), std::string >;
+
 	namespace C
 	{
-		const char defaultFieldDelimiter= '\t';
+		const std::string defaultFieldDelimiter= "\t";
 		const char defaultRecordDelimiter= '\n';
 	}
 
 	namespace storage
 	{
-		inline StaticValue< std::optional< char > > globalFieldDelimiter;
+		inline StaticValue< std::optional< std::string > > globalFieldDelimiter;
 		inline StaticValue< std::optional< char > > globalRecordDelimiter;
 	}
 
-	inline char
+	inline std::string
 	globalFieldDelimiter()
 	{
 		if( not storage::globalFieldDelimiter().has_value() ) storage::globalFieldDelimiter()= C::defaultFieldDelimiter;
@@ -43,48 +47,19 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
 		if( not storage::globalRecordDelimiter().has_value() ) storage::globalRecordDelimiter()= C::defaultRecordDelimiter;
 		return storage::globalRecordDelimiter().value();
 	}
-	
-
-	inline const int fieldIndex= std::ios::xalloc();
-
-	inline void
-	setFieldDelimiterOnIOS( std::ios &ios, const char ch )
-	{
-		ios.iword( fieldIndex )= ch;
-	}
-
-	inline char
-	getFieldDelimiter( std::ios &ios )
-	{
-		if( ios.iword( fieldIndex ) == 0 ) setFieldDelimiterOnIOS( ios, globalFieldDelimiter() );
-
-		return ios.iword( fieldIndex );
-	}
 
 	inline std::ostream &
 	operator << ( std::ostream &os, decltype( FieldDelimiter ) )
 	{
-		return os << getFieldDelimiter( os );
+		return os << FieldDelimiterState::get( os );
 	}
-
-	struct FieldDelimiterSetter
-	{
-		const char ch;
-
-		friend std::ostream &
-		operator << ( std::ostream &os, const FieldDelimiterSetter &s )
-		{
-			setFieldDelimiterOnIOS( os, s.ch );
-			return os;
-		}
-	};
 
 	namespace exports
 	{
 		auto
-		setFieldDelimiter( const char ch )
+		setFieldDelimiter( const std::string delim )
 		{
-			return FieldDelimiterSetter{ ch };
+			return FieldDelimiterState::Setter{ delim };
 		}
 	}
 
