@@ -33,7 +33,7 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 		 *
 		 * Iterates thru the runtime arguments and attempts to parse them to the compiletime specified types.
 		 */
-		template< typename Tuple T >
+		template< Tuple T >
 		auto
 		tuplizeArgs( const std::vector< std::string > &args );
 
@@ -50,10 +50,10 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 				explicit
 				ArityMismatchError( const std::size_t remaining, const std::size_t processed, const std::string &clarification= "" )
 				: remaining_( remaining ), processed_( processed ), clarification( clarification ),
-				message( IOStream::Stream{} << ( clarification.empty() ? "" : ( clarification + ": " ) )
+				message( IOStreams::Stream{} << ( clarification.empty() ? "" : ( clarification + ": " ) )
 						<< "Argument count mismatch.  "
 						<<  remaining << " remaining "
-						<<  processed j< " processed" ) {}
+						<<  processed << " processed" ) {}
 
 
 				const char *
@@ -74,7 +74,7 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 
 	// TODO: Expand this to handle compiletime-bound defaulted values.
 	template< typename Type >
-	concept Omittable= Optional< Type >;
+	concept Omittable= is_optional_v< Type >;
 
 	template< TypeListType list >
 	tuple_from_list_t< list >
@@ -101,18 +101,19 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 			else return tuplizeArgsBackend( cons_t< typename first::value_type, tail >{}, args, offset );
 		}
 		else if( offset >= args.size() ) throw ArityMismatchError{ args.size() - offset, offset, "no more arguments left" };
-		else if constexpr( is_vector_v< first > )
+		else if constexpr( Vector< first > )
 		{
 			static_assert( std::is_same_v< cdr_t< list >, Nil >, "A vector is only permissible as the final argument." );
 			if( args.size() <= offset )
 			{
-				throw ArityMismatchError{ args.size() - offset, offset, "a vector/list requires at least one runtime argument." }
+				throw ArityMismatchError{ args.size() - offset, offset, "a vector/list requires at least one runtime argument." };
 			}
+			using first_type= typename first::value_type;
 
-			const std::vector< std::string > rv;
+			std::vector< first_type > rv;
 			std::transform( begin( args ) + offset, end( args ), back_inserter( rv ),
-					IOStreams::stringify< type > );
-			return std::tuple_cat( std::tuple{ arv }, tuplizeArgsBackend( tail{}, args, offset + rv.size() ) );
+					boost::lexical_cast< first_type, std::string > );
+			return std::tuple_cat( std::tuple{ rv }, tuplizeArgsBackend( tail{}, args, offset + rv.size() ) );
 		}
 		else
 		{
@@ -131,7 +132,7 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 	auto
 	exports::tuplizeArgs( const std::vector< std::string > &args )
 	{
-		return tuplizeArgsBackend( list_from_tuple_t< T > args );
+		return tuplizeArgsBackend( list_from_tuple_t< T >{}, args );
 	}
 }
 
