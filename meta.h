@@ -16,7 +16,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include "type_lisp.h"
 
-namespace Alepha::inline Cavorite  ::detail::  meta
+namespace Alepha::Hydrogen  ::detail::  meta
 {
 	inline namespace exports
 	{
@@ -71,7 +71,7 @@ namespace Alepha::inline Cavorite  ::detail::  meta
 	}
 }
 
-namespace Alepha::inline Cavorite::inline exports::inline meta
+namespace Alepha::Hydrogen::inline exports::inline meta
 {
 	using namespace detail::meta::exports;
 }
