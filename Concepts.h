@@ -2,6 +2,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <Alepha/Alepha.h>
+
 #include <concepts>
 #include <type_traits>
 #include <iosfwd>
@@ -9,7 +11,7 @@ static_assert( __cplusplus > 2020'00 );
 #include "meta.h"
 #include "function_traits.h"
 
-namespace Alepha::inline Cavorite  ::detail::  core_concepts
+namespace Alepha::Hydrogen  ::detail::  core_concepts
 {
 	inline namespace exports
 	{
@@ -278,7 +280,7 @@ namespace Alepha::inline Cavorite  ::detail::  core_concepts
 	}
 }
 
-namespace Alepha::Cavorite::inline exports::inline core_concepts
+namespace Alepha::Hydrogen::inline exports::inline core_concepts
 {
 	using namespace detail::core_concepts::exports;
 }
