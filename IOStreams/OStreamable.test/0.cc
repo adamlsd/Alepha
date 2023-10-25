@@ -30,7 +30,25 @@ namespace
 	stringify( const Agg &agg, const std::string delim )
 	{
 		std::ostringstream oss;
+		Alepha::IOStreams::setGlobalFieldDelimiter( "YOU SHOULD NOT SEE THIS" );
 		oss << Alepha::IOStreams::setFieldDelimiter( delim );
+		oss << agg;
+		return std::move( oss ).str();
+	}
+
+	auto
+	stringify_global( const Agg &agg, const std::string delim )
+	{
+		std::ostringstream oss;
+		Alepha::IOStreams::setGlobalFieldDelimiter( delim );
+		oss << agg;
+		return std::move( oss ).str();
+	}
+
+	auto
+	stringify_default( const Agg &agg )
+	{
+		std::ostringstream oss;
 		oss << agg;
 		return std::move( oss ).str();
 	}
@@ -41,7 +59,13 @@ static auto init= Alepha::Utility::enroll <=[]
 	using namespace Alepha::Testing::exports;
 	using namespace Alepha::Testing::literals::test_literals;
 
-	"Simple OStream"_test <=TableTest< stringify >
+	"Simple OStream (default delimiter)"_test <=TableTest< stringify_default >
+	::Cases
+	{
+		{ "smoke test", { { 1, 2, 3 } }, { "1\t2\t3" } },
+	};
+
+	"Simple OStream (specific delimiter)"_test <=TableTest< stringify >
 	::Cases
 	{
 		{ "smoke test", { { 1, 2, 3 }, "\t" }, { "1\t2\t3" } },
@@ -49,4 +73,14 @@ static auto init= Alepha::Utility::enroll <=[]
 		{ "smoke test", { { 1, 2, 3 }, ";;" }, { "1;;2;;3" } },
 		{ "smoke test", { { 1, 2, 3 }, ", " }, { "1, 2, 3" } },
 	};
+
+	"Simple OStream (global delimiter)"_test <=TableTest< stringify_global >
+	::Cases
+	{
+		{ "smoke test", { { 1, 2, 3 }, "\t" }, { "1\t2\t3" } },
+		{ "smoke test", { { 1, 2, 3 }, "," }, { "1,2,3" } },
+		{ "smoke test", { { 1, 2, 3 }, ";;" }, { "1;;2;;3" } },
+		{ "smoke test", { { 1, 2, 3 }, ", " }, { "1, 2, 3" } },
+	};
+
 };

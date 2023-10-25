@@ -20,8 +20,6 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
 		enum { RecordDelimiter };
 	}
 
-	using FieldDelimiterState= StreamState< decltype( FieldDelimiter ), std::string >;
-
 	namespace C
 	{
 		const std::string defaultFieldDelimiter= "\t";
@@ -41,12 +39,23 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
 		return storage::globalFieldDelimiter().value();
 	}
 
+	namespace exports
+	{
+		inline void
+		setGlobalFieldDelimiter( const std::string delim )
+		{
+			storage::globalFieldDelimiter()= delim;
+		}
+	}
+
 	inline char
 	globalRecordDelimiter()
 	{
 		if( not storage::globalRecordDelimiter().has_value() ) storage::globalRecordDelimiter()= C::defaultRecordDelimiter;
 		return storage::globalRecordDelimiter().value();
 	}
+
+	using FieldDelimiterState= StreamState< decltype( FieldDelimiter ), std::string, globalFieldDelimiter >;
 
 	inline std::ostream &
 	operator << ( std::ostream &os, decltype( FieldDelimiter ) )

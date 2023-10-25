@@ -11,11 +11,11 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 {
 	inline namespace exports
 	{
-		template< typename Tag, typename Type >
+		template< typename Tag, typename Type, auto Default= [] { return Type{}; } >
 		class StreamState;
 	}
 
-	template< typename Tag, typename Type >
+	template< typename Tag, typename Type, auto Default >
 	class exports::StreamState
 	{
 		private:
@@ -70,7 +70,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 					ios.register_callback( callback, index() );
 				}
 				auto *&ptr= get_ptr( ios );
-				if( not ptr ) ptr= new Type{};
+				if( not ptr ) ptr= new Type{ Default() };
 			}
 
 		public:
