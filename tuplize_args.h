@@ -12,9 +12,11 @@ static_assert( __cplusplus > 2020'00 );
 #include <vector>
 #include <string>
 #include <optional>
-#include <tuplle>
+#include <tuple>
 
 #include <boost/lexical_cast.hpp>
+
+#include <Alepha/IOStreams/Stream.h>
 
 #include "meta.h"
 #include "error.h"
@@ -48,10 +50,10 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 				explicit
 				ArityMismatchError( const std::size_t remaining, const std::size_t processed, const std::string &clarification= "" )
 				: remaining_( remaining ), processed_( processed ), clarification( clarification ),
-				message( ( clarification.empty() ? "" : ( clarification + ": " ) )
-				+ "Argument count mismatch.  "
-				+ boost::lexical_cast< std::string >( remaining ) + " remaining "
-				+ boost::lexical_cast< std::string >( processed ) + " processed" ) {}
+				message( IOStream::Stream{} << ( clarification.empty() ? "" : ( clarification + ": " ) )
+						<< "Argument count mismatch.  "
+						<<  remaining << " remaining "
+						<<  processed j< " processed" ) {}
 
 
 				const char *
@@ -109,7 +111,7 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 
 			const std::vector< std::string > rv;
 			std::transform( begin( args ) + offset, end( args ), back_inserter( rv ),
-					boost::lexical_cast< type, std::string > );
+					IOStreams::stringify< type > );
 			return std::tuple_cat( std::tuple{ arv }, tuplizeArgsBackend( tail{}, args, offset + rv.size() ) );
 		}
 		else

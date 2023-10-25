@@ -29,6 +29,8 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/function_traits.h>
 #include <Alepha/template_for_each.h>
 
+#include <Alepha/IOStreams/Stream.h>
+
 #include <Alepha/Utility/evaluation_helpers.h>
 
 #include <Alepha/TotalOrder.h>
@@ -122,7 +124,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		}
 		else if constexpr( Meta::is_ostreamable_v< T > )
 		{
-			return boost::lexical_cast< std::string >( v );
+			return IOStreams::stringify( v );
 		}
 		else if constexpr( Meta::is_optional_v< T > )
 		{
@@ -269,11 +271,11 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 					const auto result= witness == expected;
 					if( not result )
 					{
-						std::cout << "  " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+						std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
 						++failureCount;
 						printDebugging< outputMode >( witness, expected );
 					}
-					else std::cout << "  " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+					else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 				}
 
 				return failureCount;
