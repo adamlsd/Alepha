@@ -5,6 +5,10 @@ add_compile_options( -fdiagnostics-column-unit=byte )
 add_compile_options( -fconcepts-diagnostics-depth=0 )
 include_directories( ${CMAKE_BINARY_DIR} . )
 
+if( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" )
+add_compile_options( -O0 )
+add_compile_options( -g )
+endif()
 
 list( APPEND CMAKE_CTEST_ARGUMENTS "-VV" )
 
