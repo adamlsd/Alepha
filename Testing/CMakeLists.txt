@@ -1,3 +1,3 @@
 add_subdirectory( TableTest.test )
 
-add_library( unit-test SHARED testlib.cc )
+add_library( unit-test SHARED testlib.cc test.cc )

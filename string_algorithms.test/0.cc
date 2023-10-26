@@ -55,5 +55,6 @@ static auto init= enroll <=[]
 		{ "Empty string", { "", ':' }, { "" } },
 		{ "Single token", { "item", ':' }, { "item" } },
 		{ "Two tokens", { "first:second", ':' }, { "first", "second" } },
+		{ "Empty string many tokens", { ":::", ':' }, { "", "", "", "" } },
 	};
 };
