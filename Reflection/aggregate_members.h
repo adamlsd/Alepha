@@ -8,6 +8,8 @@ static_assert( __cplusplus > 2020'00 );
 #include <utility>
 #include <type_traits>
 
+#include <Alepha/Concepts.h>
+
 #include <Alepha/Reflection/detail/config.h>
 #include <Alepha/Reflection/aggregate_initialization.h>
 
@@ -82,15 +84,15 @@ namespace Alepha::Hydrogen::Reflection
 		template< typename Aggregate >
 		struct empty_base
 		{
-			template
-			<
-				typename T,
+			template< typename T >
+			requires
+			(
+				true
 				//typename= typename checker< std::decay_t< T > >::type,
-				typename= std::enable_if_t< std::is_empty_v< std::decay_t< T > > >,
-				typename= std::enable_if_t< not std::is_same_v< std::decay_t< T >, Aggregate > >,
-				typename= std::enable_if_t< std::is_base_of_v< std::decay_t< T >, Aggregate > >,
-				overload< __LINE__ > = nullptr
-			>
+				and EmptyType< std::decay_t< T > >
+				and not SameAs< std::decay_t< T >, Aggregate >
+				and DerivedFrom< Aggregate, std::decay_t< T > >
+			)
 			constexpr operator T ();
 
 			//template< typename T > constexpr operator T ()= delete;
@@ -130,22 +132,16 @@ namespace Alepha::Hydrogen::Reflection
 			}
 		}
 
-		template< typename T, typename Tuple, typename= void >
-		struct is_constructible_from_tuple : std::false_type {};
+		template< typename T, typename Tuple >
+		constexpr bool is_constructible_from_tuple_v= false;
 
 		template< typename T, typename ... TupleArgs >
-		struct is_constructible_from_tuple
-		<
-			T,
-			std::tuple< TupleArgs... >,
-			std::void_t< decltype( T{ std::declval< TupleArgs >()... } ) >
-		>
-			: std::true_type {};
-
-		template< typename T, typename Tuple >
-		constexpr bool is_constructible_from_tuple_v= is_constructible_from_tuple< T, Tuple >::value;
-
-		template< typename T, typename InitTuple, std::size_t index= 0, typename= std::enable_if_t< std::is_aggregate_v< T > > >
+		constexpr bool is_constructible_from_tuple_v< T, std::tuple< TupleArgs... > >
+		{
+			ConstructibleFrom< T, TupleArgs... >
+		};
+	
+		template< Aggregate T, typename InitTuple, std::size_t index= 0 >
 		constexpr auto
 		build_base_tuple()
 		{
@@ -174,7 +170,7 @@ namespace Alepha::Hydrogen::Reflection
 			return 0;
 		}
 
-		template< typename T, std::size_t index= 0, typename= std::enable_if_t< std::is_aggregate_v< T > > >
+		template< Aggregate T, std::size_t index= 0 >
 		constexpr std::size_t
 		count_empty_bases()
 		{

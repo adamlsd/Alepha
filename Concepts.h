@@ -56,6 +56,8 @@ namespace Alepha::Hydrogen  ::detail::  core_concepts
 			and ConvertibleTo< T, Target >
 		;
 
+		template< typename T >
+		concept EmptyType= std::is_empty_v< T >;
 
 		// Stream related concepts...
 		template< typename T >
