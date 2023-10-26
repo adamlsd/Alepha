@@ -249,14 +249,20 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		using args_type= Meta::product_type_decay_t< typename function_traits_type::args_type >;
 		using return_type= typename function_traits_type::return_type;
 
-		struct Cases
+		// The classic table-test engine would only support `Cases` which were run-and-test-value
+		// without the ability to test exceptions.  The `ExceptionCases` construct was used to
+		// test throwing cases.
+		//
+		// A unified `Cases` type is forthcoming, and thus `ExecutionCases` exists for backwards
+		// compatibility.
+		struct ExecutionCases
 		{
 			using TestDescription= std::tuple< std::string, args_type, return_type >;
 
 			std::vector< TestDescription > tests;
 
 			explicit
-			Cases( std::initializer_list< TestDescription > initList )
+			ExecutionCases( std::initializer_list< TestDescription > initList )
 				: tests( initList ) {}
 
 			int
@@ -394,6 +400,66 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				return failureCount;
 			}
 		};
+
+		class UniversalCases
+		{
+			using RunDescription= std::tuple< std::string, args_type, return_type >;
+			using Invoker= std::function< return_type () >;
+
+			enum class TestResult { Passed, Failed };
+
+			struct UniversalHandler
+			{
+				std::function< TestResult ( Invoker, const std::string & ) > impl;
+
+				bool operator() ( Invoker invoker ) const { return impl( invoker ); }
+
+				UniversalHandler( const return_type expected ) : impl
+				{
+					[expected]( Invoker invoker, const std::string &comment )
+					{
+						const auto witness= invoker();
+						const auto result= witness == expected ? TestResult::Passed : TestResult::Failed;
+						
+						if( result == TestResult::Failed )
+						{
+							std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+							printDebugging< outputMode >( witness, expected );
+						}
+						else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+						return result;
+					}
+				}
+				{}
+
+				template< typename T >
+				UniversalHandler( std::type_identity< T > ) : impl
+				{
+					[]( Invoker invoker )
+					{
+						try { std::ignore= invoker(); }
+						catch( const T & ) { return TestResult::Passed; }
+						return TestResult::Failed;
+					}
+				}
+				{}
+
+				UniversalHandler( const DerivedFrom< std::exception > auto exemplar ) : impl
+				{
+					[expected= std::string{ exemplar.what() }]( Invoker invoker )
+					{
+						throw "Unimpl";
+					}
+				}
+				{}
+			};
+
+			using TestDescription= std::tuple< std::string, args_type, UniversalHandler >;
+		};
+
+		// When the `UniversalCases` impl is ready to go, then this alias shim can be redirected to that form.  Then I can
+		// retire the `ExceptionCases` and `ExecutionCases` forms and replace them with an alias to `UniversalCases`.
+		using Cases= ExecutionCases;
 	};
 
 #ifdef DISABLED
