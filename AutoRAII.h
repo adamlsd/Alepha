@@ -34,49 +34,24 @@ namespace Alepha::Hydrogen
 						dtor( value );
 					}
 
-					template
-					<
-						typename AutoRAII_= AutoRAII,
-						typename= std::enable_if_t< std::is_same_v< AutoRAII_, AutoRAII > >,
-						typename= std::enable_if_t< std::is_function_v< decltype( AutoRAII_::dtor ) > >
-					>
-					AutoRAII( AutoRAII &&move )
-						: value()
-					{
-						std::swap( move.dtor, this->dtor );
-						std::swap( move.value, this->value );
-					}
-
 					template< typename Ctor >
 					explicit AutoRAII( Ctor ctor, Dtor dtor ) : dtor( std::move( dtor ) ), value( ctor() ) {}
 
-					template
-					<
-						typename AutoRAII_= AutoRAII,
-						typename= std::enable_if_t< std::is_same_v< AutoRAII_, AutoRAII > >,
-						typename= std::enable_if_t< std::is_function_v< decltype( AutoRAII_::dtor ) > >
-					>
-					AutoRAII &operator= ( AutoRAII_ &&move )
-					{
-						std::swap( move.dtor, this->dtor );
-						std::swap( move.value, this->value );
-					}
-
 					operator const T &() const { return value; }
 
-					template
-					<
-						typename T_= T,
-						typename= std::enable_if_t< std::is_pointer_v< T_ > >
-					>
-					decltype( auto ) operator *() const { return *value; }
+					decltype( auto )
+					operator *() const
+					requires( std::is_pointer_v< T > )
+					{
+						return *value;
+					}
 					
-					template
-					<
-						typename T_= T,
-						typename= std::enable_if_t< std::is_pointer_v< T_ > >
-					>
-					decltype( auto ) operator->() const { return value; }
+					decltype( auto )
+					operator->() const
+					requires( std::is_pointer_v< T > )
+					{
+						return value;
+					}
 			};
 
 			template< typename Dtor >
