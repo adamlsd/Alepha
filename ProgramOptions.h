@@ -92,7 +92,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/Concepts.h>
 #include <Alepha/string_algorithms.h>
 
-#include <Alepha/IOStreams/Stream.h>
+#include <Alepha/IOStreams/String.h>
 
 #include <Alepha/Utility/evaluation_helpers.h>
 

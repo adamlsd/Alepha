@@ -8,18 +8,18 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Concepts.h>
 
-namespace Alepha::Hydrogen::IOStreams  ::detail::  stream
+namespace Alepha::Hydrogen::IOStreams  ::detail::  string
 {
 	inline namespace exports
 	{
-		class Stream;
+		class String;
 
 		enum { FinishString };
 
 		std::string stringify( const Alepha::OStreamable auto &item, Alepha::OStreamable auto && ... params );
 	}
 
-	class exports::Stream
+	class exports::String
 	{
 		private:
 			// TODO: We need the exception throwing capabilities of the
@@ -29,7 +29,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream
 			std::ostringstream oss;
 
 		public:
-			Stream &&
+			String &&
 			operator << ( const Alepha::OStreamable auto &t ) &&
 			{
 				oss << t;
@@ -51,11 +51,11 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream
 	inline std::string
 	exports::stringify( const Alepha::OStreamable auto &item, Alepha::OStreamable auto && ... params )
 	{
-		return ( Stream{} << ... << params ) << item << FinishString;
+		return ( String{} << ... << params ) << item << FinishString;
 	}
 }
 
-namespace Alepha::Hydrogen::IOStreams::inline exports::inline stream
+namespace Alepha::Hydrogen::IOStreams::inline exports::inline string
 {
-	using namespace detail::stream::exports;
+	using namespace detail::string::exports;
 }

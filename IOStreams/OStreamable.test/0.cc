@@ -10,7 +10,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/auto_comparable.h>
 
 #include <Alepha/IOStreams/delimiters.h>
-#include <Alepha/IOStreams/Stream.h>
+#include <Alepha/IOStreams/String.h>
 
 namespace
 {
@@ -59,7 +59,7 @@ static auto init= Alepha::Utility::enroll <=[]
 {
 	using namespace Alepha::Testing::exports;
 	using namespace Alepha::Testing::literals::test_literals;
-	using namespace Alepha::IOStreams::exports::stream;
+	using namespace Alepha::IOStreams::exports::string;
 
 	"Simple OStream (default delimiter)"_test <=TableTest< stringify_default >
 	::Cases
@@ -80,9 +80,9 @@ static auto init= Alepha::Utility::enroll <=[]
 	<
 		[]( const Agg agg, const std::string delim )
 		{
-			using Alepha::IOStreams::Stream;
+			using Alepha::IOStreams::String;
 			using Alepha::IOStreams::setFieldDelimiter;
-			return Stream{} << setFieldDelimiter( delim ) << agg << FinishString;
+			return String{} << setFieldDelimiter( delim ) << agg << FinishString;
 		}
 	>
 	::Cases

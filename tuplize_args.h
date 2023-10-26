@@ -16,7 +16,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <boost/lexical_cast.hpp>
 
-#include <Alepha/IOStreams/Stream.h>
+#include <Alepha/IOStreams/String.h>
 
 #include "meta.h"
 #include "error.h"
@@ -50,7 +50,7 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 				explicit
 				ArityMismatchError( const std::size_t remaining, const std::size_t processed, const std::string &clarification= "" )
 				: remaining_( remaining ), processed_( processed ), clarification( clarification ),
-				message( IOStreams::Stream{} << ( clarification.empty() ? "" : ( clarification + ": " ) )
+				message( IOStreams::String{} << ( clarification.empty() ? "" : ( clarification + ": " ) )
 						<< "Argument count mismatch.  "
 						<<  remaining << " remaining "
 						<<  processed << " processed" ) {}

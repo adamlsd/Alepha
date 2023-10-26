@@ -29,7 +29,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/function_traits.h>
 #include <Alepha/template_for_each.h>
 
-#include <Alepha/IOStreams/Stream.h>
+#include <Alepha/IOStreams/String.h>
 
 #include <Alepha/Utility/evaluation_helpers.h>
 
