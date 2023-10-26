@@ -96,7 +96,7 @@ namespace Alepha::Hydrogen::Testing
 			explicit TestFailureException( const int failureCount ) : failureCount( failureCount ) {}
 		};
 
-		template< typename Integer, typename= std::enable_if_t< std::is_integral_v< Integer > > >
+		template< Integral Integer >
 		inline auto
 		operator <= ( TestName name, std::function< Integer () > test )
 		{
