@@ -6,7 +6,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <type_traits>
 #include <functional>
 
-namespace Alepha::inline Cavorite  ::detail::  function_traits_module
+namespace Alepha::Hydrogen  ::detail::  function_traits_module
 {
 	inline namespace exports
 	{
@@ -76,7 +76,7 @@ namespace Alepha::inline Cavorite  ::detail::  function_traits_module
 	{};
 }
 
-namespace Alepha::Cavorite::inline exports::inline function_traits_module
+namespace Alepha::Hydrogen::inline exports::inline function_traits_module
 {
 	using namespace detail::function_traits_module::exports;
 }

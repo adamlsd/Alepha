@@ -89,9 +89,10 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <boost/lexical_cast.hpp>
 
-#include <Alepha/Alepha.h>
 #include <Alepha/Concepts.h>
 #include <Alepha/string_algorithms.h>
+
+#include <Alepha/IOStreams/Stream.h>
 
 #include <Alepha/Utility/evaluation_helpers.h>
 
@@ -265,7 +266,7 @@ namespace Alepha::inline Cavorite  ::detail::  program_options
 				// variable's value in C++ at runtime.
 				auto defaultBuilder= [&value]
 				{
-					auto text= boost::lexical_cast< std::string >( value );
+					auto text= IOStreams::stringify( value );
 
 					if( text.find_first_of( " \n\t" ) != std::string::npos )
 					{
