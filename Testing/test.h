@@ -72,22 +72,12 @@ namespace Alepha::Hydrogen::Testing
 			}
 		}
 
-		StaticValue< std::vector< std::tuple< std::string, bool, std::function< void() > > > > registry;
-		auto initRegistry= enroll <=registry;
-
 		// It is okay to discard this, if making tests in an enroll block.
-		inline auto
-		operator <= ( TestName name, std::function< void () > test )
+		inline namespace impl
 		{
-			struct TestRegistration {} rv;
-			if( C::debugTestRegistration ) std::cerr << "Attempting to register: " << name.name << std::endl;
-
-			registry().emplace_back( name.name, name.disabled, test );
-			assert( not registry().empty() );
-			assert( std::get< 1 >( registry().back() ) == name.disabled );
-
-			return rv;
-		};
+			struct TestRegistration {};
+			TestRegistration operator <= ( TestName name, std::function< void () > test );
+		}
 
 		struct exports::TestFailure
 		{
@@ -171,65 +161,9 @@ namespace Alepha::Hydrogen::Testing
 
 		namespace exports
 		{
-			[[nodiscard]] inline int
-			runAllTests( const std::vector< std::string > selections= {} )
-			{
-				if( C::debugTestRun )
-				{
-					std::cerr << "Going to run all tests.  (I see " << registry().size() << " tests.)" << std::endl;
-				}
-				bool failed= false;
-				const auto selected= [ selections ]( const std::string test )
-				{
-					for( const auto &selection: selections )
-					{
-						if( test.find( selection ) != std::string::npos ) return true;
-					}
-					return empty( selections );
-				};
+			[[nodiscard]] int runAllTests( const std::vector< std::string > selections= {} );
 
-				const auto explicitlyNamed= [ selections ]( const std::string s )
-				{
-					return std::find( begin( selections ), end( selections ), s ) != end( selections );
-				};
-
-				for( const auto &[ name, disabled, test ]: registry() )
-				{
-					if( C::debugTestRun ) std::cerr << "Trying test " << name << std::endl;
-
-					if( explicitlyNamed( name ) or not disabled and selected( name ) )
-					{
-						std::cout << C::testInfo << "BEGIN" << resetStyle << "   : " << name << std::endl;
-						try
-						{
-							test();
-							std::cout << "  " << C::testPass << "SUCCESS" << resetStyle << ": " << name << std::endl;
-						}
-						catch( ... )
-						{
-							try
-							{
-								failed= true;
-								std::cout << "  " << C::testFail << "FAILURE" << resetStyle << ": " << name;
-								throw;
-							}
-							catch( const TestFailure &fail ) { std::cout << " -- " <<  fail.failureCount << " failures."; }
-							catch( ... ) { std::cout << " --  unknown failure count"; }
-							std::cout << std::endl;
-						}
-
-						std::cout << C::testInfo << "FINISHED" << resetStyle << ": " << name << std::endl;
-					}
-				}
-				
-				return failed ? EXIT_FAILURE : EXIT_SUCCESS;
-			}
-
-			[[nodiscard]] inline int
-			runAllTests( const argcnt_t argcnt, const argvec_t argvec )
-			{
-				return runAllTests( { argvec + 1, argvec + argcnt } );
-			}
+			[[nodiscard]] int runAllTests( const argcnt_t argcnt, const argvec_t argvec );
 		}
 	}
 
