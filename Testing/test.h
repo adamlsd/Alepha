@@ -60,7 +60,7 @@ namespace Alepha::Hydrogen::Testing
 
 		namespace exports
 		{
-			struct TestFailureException;
+			struct TestFailure;
 
 			inline namespace literals
 			{
@@ -89,11 +89,13 @@ namespace Alepha::Hydrogen::Testing
 			return rv;
 		};
 
-		struct exports::TestFailureException
+		struct exports::TestFailure
 		{
 			int failureCount= -1;
+			std::string message_;
 
-			explicit TestFailureException( const int failureCount ) : failureCount( failureCount ) {}
+			explicit TestFailure( const int failureCount )
+				: failureCount( failureCount ) {}
 		};
 
 		template< Integral Integer >
@@ -106,7 +108,7 @@ namespace Alepha::Hydrogen::Testing
 				{
 					if( not test() )
 					{
-						throw TestFailureException{ 1 };
+						throw TestFailure{ 1 };
 					}
 				};
 
@@ -117,7 +119,7 @@ namespace Alepha::Hydrogen::Testing
 				auto wrapper= [test]
 				{
 					const int failures= test();
-					if( failures > 0 ) throw TestFailureException{ failures };
+					if( failures > 0 ) throw TestFailure{ failures };
 				};
 
 				return name <= wrapper;
@@ -141,7 +143,7 @@ namespace Alepha::Hydrogen::Testing
 					void
 					demand( const bool state, const std::string test= "" )
 					{
-						if( not state ) throw TestFailureException( failures.size() + 1 );
+						if( not state ) throw TestFailure( failures.size() + 1 );
 					}
 			};
 
@@ -211,7 +213,7 @@ namespace Alepha::Hydrogen::Testing
 								std::cout << "  " << C::testFail << "FAILURE" << resetStyle << ": " << name;
 								throw;
 							}
-							catch( const TestFailureException &fail ) { std::cout << " -- " <<  fail.failureCount << " failures."; }
+							catch( const TestFailure &fail ) { std::cout << " -- " <<  fail.failureCount << " failures."; }
 							catch( ... ) { std::cout << " --  unknown failure count"; }
 							std::cout << std::endl;
 						}
