@@ -47,6 +47,8 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		enum class OutputMode { All, Relaxed };
 	}
 
+	inline void breakpoint() {}
+
 	namespace C
 	{
 		inline namespace Colors
@@ -503,8 +505,6 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	{
 		template< FunctionVariable auto, OutputMode outputMode= OutputMode::All > struct TableTest;
 	}
-
-	inline void breakpoint() {}
 
 	namespace C
 	{
