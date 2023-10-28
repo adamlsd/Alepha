@@ -6,6 +6,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <boost/preprocessor.hpp>
 
+#include <Alepha/meta.h>
+
 #include <Alepha/Reflection/detail/config.h>
 #include <Alepha/Reflection/aggregate_members.h>
 
@@ -192,6 +194,9 @@ namespace Alepha::Hydrogen::Reflection
 			{
 				return tuplizeAggregate< compute_salient_members_count_v< std::decay_t< Aggregate > > >( std::forward< Aggregate >( agg ) );
 			}
+
+			template< typename Aggregate >
+			using aggregate_tuple_t= decay_tuple_t< std::decay_t< decltype( tuplizeAggregate( std::declval< const Aggregate & >() ) ) > >;
 		}
 	}
 
