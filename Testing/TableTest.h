@@ -129,8 +129,9 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		{}
 #endif
 
-#if 0
+#if 1
 		template< typename T >
+		requires( not SameAs< T, void > )
 		BasicUniversalHandler( std::type_identity< T > ) : impl
 		{
 			[]( Invoker invoker, const std::string &comment )
@@ -145,6 +146,27 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				{
 					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Passed;
+				}
+			}
+		}
+		{}
+
+		template< typename T >
+		requires( SameAs< T, std::type_identity< void > > or SameAs< T, std::nothrow_t > )
+		BasicUniversalHandler( T ) : impl
+		{
+			[]( Invoker invoker, const std::string &comment )
+			{
+				try
+				{
+					std::ignore= invoker();
+					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+					return TestResult::Passed;
+				}
+				catch( const T & )
+				{
+					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+					return TestResult::Failed;
 				}
 			}
 		}
@@ -251,6 +273,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 
 #if 0
 		template< typename T >
+		requires( not SameAs< T, void > )
 		BasicUniversalHandler( std::type_identity< T > ) : impl
 		{
 			[]( Invoker invoker, const std::string &comment )
@@ -265,6 +288,27 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				{
 					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Passed;
+				}
+			}
+		}
+		{}
+
+		template< typename T >
+		requires( SameAs< T, std::type_identity< void > > or SameAs< T, std::nothrow_t > )
+		BasicUniversalHandler( T ) : impl
+		{
+			[]( Invoker invoker, const std::string &comment )
+			{
+				try
+				{
+					std::ignore= invoker();
+					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+					return TestResult::Passed;
+				}
+				catch( const T & )
+				{
+					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+					return TestResult::Failed;
 				}
 			}
 		}
@@ -370,8 +414,9 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		{}
 #endif
 
-#if 0
+#if 1
 		template< typename T >
+		requires( not SameAs< T, void > )
 		BasicUniversalHandler( std::type_identity< T > ) : impl
 		{
 			[]( Invoker invoker, const std::string &comment )
@@ -386,6 +431,27 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				{
 					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Passed;
+				}
+			}
+		}
+		{}
+
+		template< typename T >
+		requires( SameAs< T, std::type_identity< void > > or SameAs< T, std::nothrow_t > )
+		BasicUniversalHandler( T ) : impl
+		{
+			[]( Invoker invoker, const std::string &comment )
+			{
+				try
+				{
+					std::ignore= invoker();
+					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+					return TestResult::Passed;
+				}
+				catch( const T & )
+				{
+					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+					return TestResult::Failed;
 				}
 			}
 		}
@@ -660,7 +726,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			}
 		};
 
-		struct ExceptionCases
+		struct ExceptionCases_real
 		{
 			using Invoker= std::function< void () >;
 			struct ExceptionHandler
@@ -684,6 +750,23 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				{}
 
 				template< typename T >
+				requires( SameAs< T, std::type_identity< void > > or SameAs< T, std::nothrow_t > )
+				ExceptionHandler( T ) : impl
+				{
+					[]( Invoker invoker )
+					{
+						try
+						{
+							invoker();
+							return true;
+						}
+						catch( const T & ) { return false; }
+					}
+				}
+				{}
+
+				template< typename T >
+				requires( not SameAs< T, void > )
 				ExceptionHandler( std::type_identity< T > ) : impl
 				{
 					[]( Invoker invoker )
@@ -748,7 +831,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 
 
 			explicit
-			ExceptionCases( std::initializer_list< TestDescription > initList )
+			ExceptionCases_real( std::initializer_list< TestDescription > initList )
 				: tests( initList ) {}
 
 			int
@@ -814,6 +897,9 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		// retire the `ExceptionCases` and `ExecutionCases` forms and replace them with an alias to `UniversalCases`.
 		using Cases= ExecutionCases;
 		//using Cases= UniversalCases;
+
+		using ExceptionCases= ExceptionCases_real;
+		//using ExceptionCases= UniversalCases;
 	};
 
 #ifdef DISABLED

@@ -42,7 +42,11 @@ static auto init= enroll <=[]
 	{
 		{ "Complete var",
 			{ "$H$ $W$", { { "H", lambaste<="Hello" }, { "W", lambaste<="World" } }, '$' },
-			{}
+			std::nothrow
+		},
+		{ "Complete var",
+			{ "$H$ $W$", { { "H", lambaste<="Hello" }, { "W", lambaste<="World" } }, '$' },
+			std::type_identity< void >{}
 		},
 		{ "Incomplete var",
 			{ "$H$ $W", { { "H", lambaste<="Hello" }, { "W", lambaste<="World" } }, '$' },
