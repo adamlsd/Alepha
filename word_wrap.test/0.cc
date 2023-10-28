@@ -39,7 +39,7 @@ static auto init= Alepha::Utility::enroll <=[]
 		{ "Trailing spaces should be kept", { helloWorld + "     ", 100, 0 }, helloWorld + "     " },
 		{ "Trailing spaces should be dropped", { helloWorld + "       ", helloWorld.size(), 0 }, helloWorld },
 		{ "All but 2 trailing spaces dropped", { helloWorld + "       ", helloWorld.size() + 2, 0 },
-				helloWorld + "  "},
+				helloWorld + "  " },
 
 		{ "Split line", { helloWorld, 8, 0 }, "Hello \nWorld" }, // TODO: Should we swallow trailing spaces?
 	};

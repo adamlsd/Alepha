@@ -61,6 +61,7 @@ namespace Alepha::Hydrogen::Testing::detail::testing
 						throw;
 					}
 					catch( const TestFailure &fail ) { std::cout << " -- " <<  fail.failureCount << " failures."; }
+					catch( const std::exception &ex ) { std::cout << " --  unknown failure count (mesg: " << ex.what() << ")"; }
 					catch( ... ) { std::cout << " --  unknown failure count"; }
 					std::cout << std::endl;
 				}
