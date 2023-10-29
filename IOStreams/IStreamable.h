@@ -13,6 +13,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Reflection/tuplizeAggregate.h>
 
+#include "delimiters.h"
+
 namespace Alepha::Hydrogen::IOStreams  ::detail::  istreamable_module
 {
 	inline namespace exports
@@ -32,7 +34,8 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  istreamable_module
 		const auto commentChar= line.find( "#" );
 		if( commentChar != std::string::npos ) line= line.substr( line.find( "#" ) );
 
-		const auto tokens= split( line, '\t' );
+		const auto delim= getFieldDelimiter( is );
+		const auto tokens= split( line, delim );
 
 		auto decomposed= Alepha::Reflection::tuplizeAggregate( istreamable );
 
