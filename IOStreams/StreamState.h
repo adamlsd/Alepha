@@ -91,6 +91,13 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 					StreamState::get( os )= s.val;
 					return os;
 				}
+
+				friend std::istream &
+				operator >> ( std::istream &is, const Setter &s )
+				{
+					StreamState::get( is )= s.val;
+					return is;
+				}
 			};
 	};
 }
