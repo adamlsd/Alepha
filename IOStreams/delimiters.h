@@ -70,6 +70,12 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
 		{
 			return FieldDelimiterState::Setter{ delim };
 		}
+
+		const auto &
+		getFieldDelimiter( std::ios_base &ios )
+		{
+			return FieldDelimiterState::get( ios );
+		}
 	}
 
 	inline const int recordIndex= std::ios::xalloc();
