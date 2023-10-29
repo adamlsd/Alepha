@@ -75,6 +75,8 @@ namespace Alepha::Hydrogen  ::detail::  string_algorithms
 
 		std::vector< std::string > split( const std::string &s, char token );
 
+		std::vector< std::string > split( std::string s, const std::string &delim );
+
 		/*!
 		 * Parses an integral range description into a vector of values.
 		 */

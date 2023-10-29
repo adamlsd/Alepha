@@ -151,4 +151,19 @@ namespace Alepha::Hydrogen  ::detail::  string_algorithms
 		rv.push_back( std::move( next ) );
 		return rv;
 	}
+
+	std::vector< std::string >
+	exports::split( std::string s, const std::string &delim )
+	{
+		std::vector< std::string > rv;
+		while( true )
+		{
+			const auto pos= s.find( delim );
+			rv.push_back( s.substr( 0, pos ) );
+			if( pos == std::string::npos ) break;
+			s= s.substr( pos + delim.size() );
+		}
+
+		return rv;
+	}
 }

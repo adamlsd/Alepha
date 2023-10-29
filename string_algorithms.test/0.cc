@@ -50,11 +50,29 @@ static auto init= enroll <=[]
 		},
 	};
 
-	"Does the `split` function handle simple cases correctly?"_test <=TableTest< Alepha::split >::Cases
+	"Does the `split` function handle simple cases correctly?"_test <=TableTest
+	<
+		[] ( const std::string text, const char delim ) { return Alepha::split( text, delim ); }
+	>
+	::Cases
 	{
 		{ "Empty string", { "", ':' }, { "" } },
 		{ "Single token", { "item", ':' }, { "item" } },
 		{ "Two tokens", { "first:second", ':' }, { "first", "second" } },
 		{ "Empty string many tokens", { ":::", ':' }, { "", "", "", "" } },
+	};
+
+	"Does the `split` function over multi-token-delimiters handle simple cases correctly?"_test <=TableTest
+	<
+		[] ( const std::string text, const std::string delim ) { return Alepha::split( text, delim ); }
+	>
+	::Cases
+	{
+		{ "Empty string", { "", "::" }, { "" } },
+		{ "Single token", { "item", "::" }, { "item" } },
+		{ "Two tokens", { "first::second", "::" }, { "first", "second" } },
+		{ "Empty string many tokens", { "::::::", "::" }, { "", "", "", "" } },
+		{ "Alphabet string many tokens", { "a::b::c::d", "::" }, { "a", "b", "c", "d" } },
+		{ "Alphabet string many tokens", { "::a::b::c::d::", "::" }, { "", "a", "b", "c", "d", "" } },
 	};
 };
