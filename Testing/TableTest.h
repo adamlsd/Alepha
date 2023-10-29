@@ -58,8 +58,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	}
 
 	template< OutputMode outputMode, typename T >
-	void
-	printDebugging( const T &witness, const T &expected );
+	void printDebugging( const T &witness, const T &expected );
 
 	template< Aggregate Agg, typename ... Args >
 	struct TupleSneak
