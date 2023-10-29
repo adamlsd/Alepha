@@ -60,13 +60,36 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	template< OutputMode outputMode, typename T >
 	void printDebugging( const T &witness, const T &expected );
 
-	template< Aggregate Agg, typename ... Args >
-	struct TupleSneak
+	template< Aggregate Agg, TypeListType >
+	struct TupleSneak;
+
+	template< Aggregate Agg >
+	struct TupleSneak< Agg, Nil >
 		: Agg
 	{
+		TupleSneak() { std::cerr << "The inherited default ctor was called." << std::endl; }
+
+		protected:
+			void set( Agg agg ) { static_cast< Agg & >( *this )= agg; }
+	};
+
+	template< Aggregate Agg, typename ... Args >
+	struct TupleSneak< Agg, TypeList< Args... > >
+		: TupleSneak< Agg, cdr_t< TypeList< Args... > > >
+	{
+		using Parent= TupleSneak< Agg, cdr_t< TypeList< Args... > > >;
+		using Parent::Parent;
+
 		TupleSneak( Args ... args )
-			: Agg( args... )
-		{}
+		{
+			std::cerr << "I was the ctor called, with " << sizeof...( Args ) << " arguments." << std::endl;
+			tuple_for_each( std::tuple{ args... } ) <=
+			[]( const auto element )
+			{
+				std::cerr << "Element: " << element << std::endl;
+			};
+			this->set( { args... } );
+		}
 	};
 
 	enum class TestResult { Passed, Failed };
@@ -77,7 +100,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	static consteval auto
 	compute_base_f() noexcept
 	{
-		if constexpr ( Aggregate< T > ) return std::type_identity< TupleSneak< T, Reflection::aggregate_tuple_t< T > > >{};
+		if constexpr ( Aggregate< T > ) return std::type_identity< TupleSneak< T, list_from_tuple_t< Reflection::aggregate_tuple_t< T > > > >{};
 		else if constexpr( std::is_class_v< T > ) return std::type_identity< T >{};
 		else return std::type_identity< BlankBase >{};
 	}
@@ -107,13 +130,27 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		{
 			[expected]( Invoker invoker, const std::string &comment )
 			{
-				const return_type witness= invoker();
+				const auto witness= Utility::evaluate <=[&]() -> std::optional< return_type >
+				{
+					try
+					{
+						return invoker();
+					}
+					catch( ... )
+					{
+						return std::nullopt;
+					}
+				};
 				const auto result= witness == expected ? TestResult::Passed : TestResult::Failed;
 				
 				if( result == TestResult::Failed )
 				{
-					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
-					printDebugging< outputMode >( witness, expected );
+					if( witness.has_value() )
+					{
+						std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+						printDebugging< outputMode >( witness.value(), expected );
+					}
+					else std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": Unexpected exception in \"" << comment << '"' << std::endl;
 				}
 				else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 				return result;
@@ -164,7 +201,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Passed;
 				}
-				catch( const T & )
+				catch( ... )
 				{
 					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Failed;
@@ -207,10 +244,10 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 
 	template< Aggregate return_type, OutputMode outputMode >
 	struct BasicUniversalHandler< return_type, outputMode >
-		: return_type
+		: compute_base_t< return_type >
 	{
 		using ComputedBase= compute_base_t< return_type >;
-		//using ComputedBase::ComputedBase;
+		using ComputedBase::ComputedBase;
 
 		using Invoker= std::function< return_type () >;
 
@@ -225,14 +262,28 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			{
 				const return_type *const expected_p= this;
 				const auto expected= *expected_p;
-				const return_type witness= invoker();
-
+				breakpoint();
+				const auto witness= Utility::evaluate <=[&]() -> std::optional< return_type >
+				{
+					try
+					{
+						return invoker();
+					}
+					catch( ... )
+					{
+						return std::nullopt;
+					}
+				};
 				const auto result= witness == expected ? TestResult::Passed : TestResult::Failed;
 				
 				if( result == TestResult::Failed )
 				{
-					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
-					printDebugging< outputMode >( witness, expected );
+					if( witness.has_value() )
+					{
+						std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+						printDebugging< outputMode >( witness.value(), expected );
+					}
+					else std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": Unexpected exception in \"" << comment << '"' << std::endl;
 				}
 				else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 				return result;
@@ -272,7 +323,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		{}
 #endif
 
-#if 0
+#if 1
 		template< typename T >
 		requires( not SameAs< T, void > )
 		BasicUniversalHandler( std::type_identity< T > ) : impl
@@ -282,6 +333,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				try
 				{
 					std::ignore= invoker();
+					breakpoint();
 					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Failed;
 				}
@@ -306,7 +358,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Passed;
 				}
-				catch( const T & )
+				catch( ... )
 				{
 					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Failed;
@@ -368,14 +420,27 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			{
 				const return_type *const expected_p= this;
 				const auto expected= *expected_p;
-				const return_type witness= invoker();
-
+				const auto witness= Utility::evaluate <=[&]() -> std::optional< return_type >
+				{
+					try
+					{
+						return invoker();
+					}
+					catch( ... )
+					{
+						return std::nullopt;
+					}
+				};
 				const auto result= witness == expected ? TestResult::Passed : TestResult::Failed;
 				
 				if( result == TestResult::Failed )
 				{
-					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
-					printDebugging< outputMode >( witness, expected );
+					if( witness.has_value() )
+					{
+						std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
+						printDebugging< outputMode >( witness.value(), expected );
+					}
+					else std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": Unexpected exception in \"" << comment << '"' << std::endl;
 				}
 				else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 				return result;
@@ -449,7 +514,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 					std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Passed;
 				}
-				catch( const T & )
+				catch( ... )
 				{
 					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
 					return TestResult::Failed;
@@ -759,7 +824,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 							invoker();
 							return true;
 						}
-						catch( const T & ) { return false; }
+						catch( ... ) { return false; }
 					}
 				}
 				{}
@@ -868,7 +933,18 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			std::vector< TestDescription > tests;
 
 			UniversalCases( std::initializer_list< TestDescription > initList )
-				: tests( initList ) {}
+			{
+				for( const auto &desc: initList )
+				{
+					if constexpr( Aggregate< return_type > )
+					{
+						std::cerr << "Case: " << std::get< 0 >( desc );
+						const return_type &v= std::get< 2 >( desc );
+						std::cerr << " (" << v << ")" << std::endl;
+						tests.push_back( desc );
+					}
+				}
+			}
 
 			int
 			operator() () const
@@ -877,8 +953,11 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 				for( const auto &[ comment, params, checker ]: tests )
 				{
 					if( C::debugCaseTypes ) std::cerr << boost::core::demangle( typeid( params ).name() ) << std::endl;
-					breakpoint();
-					auto invoker= [&]{ return std::apply( function, params ); };
+					auto invoker= [&]
+					{
+						breakpoint();
+						return std::apply( function, params );
+					};
 					const TestResult result= checker( invoker, comment );
 					if( result == TestResult::Failed )
 					{
@@ -886,6 +965,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 						++failureCount;
 					}
 					else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
+					breakpoint();
 				}
 
 				return failureCount;
@@ -894,11 +974,11 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 
 		// When the `UniversalCases` impl is ready to go, then this alias shim can be redirected to that form.  Then I can
 		// retire the `ExceptionCases` and `ExecutionCases` forms and replace them with an alias to `UniversalCases`.
-		using Cases= ExecutionCases;
-		//using Cases= UniversalCases;
+		//using Cases= ExecutionCases;
+		using Cases= UniversalCases;
 
-		using ExceptionCases= ExceptionCases_real;
-		//using ExceptionCases= UniversalCases;
+		//using ExceptionCases= ExceptionCases_real;
+		using ExceptionCases= UniversalCases;
 	};
 
 #ifdef DISABLED
