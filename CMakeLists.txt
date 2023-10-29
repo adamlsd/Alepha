@@ -8,7 +8,7 @@ include( cmake/rules.cmake )
 # The core alepha library:
 
 add_library( alepha SHARED
-	Console.cpp
+	Console.cc
 	ProgramOptions.cpp
 	string_algorithms.cpp
 	word_wrap.cpp

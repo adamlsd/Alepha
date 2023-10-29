@@ -39,7 +39,7 @@ static_assert( __cplusplus > 2020'00 );
 // universally supported for effectively all cases modern users will care about.
 
 
-namespace Alepha::Hydrogen  ::detail::  console
+namespace Alepha::Hydrogen  ::detail::  console_m
 {
 	namespace
 	{

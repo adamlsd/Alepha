@@ -16,7 +16,7 @@ static_assert( __cplusplus > 2020'00 );
 // As long as this works on most (all?) modern terminal emulators, this should be
 // fine.
 
-namespace Alepha::Hydrogen  ::detail::  console
+namespace Alepha::Hydrogen  ::detail::  console_m
 {
 	inline namespace exports {}
 
@@ -244,7 +244,7 @@ namespace Alepha::Hydrogen  ::detail::  console
 		
 }
 
-namespace Alepha::Hydrogen::inline exports::inline console
+namespace Alepha::Hydrogen::inline exports::inline console_m
 {
-	using namespace detail::console::exports;
+	using namespace detail::console_m::exports;
 }
