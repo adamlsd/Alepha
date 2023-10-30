@@ -9,9 +9,9 @@ include( cmake/rules.cmake )
 
 add_library( alepha SHARED
 	Console.cc
-	ProgramOptions.cpp
-	string_algorithms.cpp
-	word_wrap.cpp
+	ProgramOptions.cc
+	string_algorithms.cc
+	word_wrap.cc
 )
 # Everything else depends upon it
 link_libraries( alepha )
