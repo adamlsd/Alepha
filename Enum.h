@@ -15,7 +15,6 @@ static_assert( __cplusplus > 2020'00 );
 
 #include "Concepts.h"
 #include "ConstexprString.h"
-#include "evaluation_helpers.h"
 #include "meta.h"
 
 namespace Alepha::inline Cavorite  ::detail:: enhanced_enum

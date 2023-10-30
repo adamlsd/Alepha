@@ -2,11 +2,13 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <Alepha/Alepha.h>
+
 #include <tuple>
 
 #include <boost/noncopyable.hpp>
 
-namespace Alepha::inline Cavorite  ::detail::  static_value
+namespace Alepha::Hydrogen::detail::  static_value
 {
 	inline namespace exports
 	{
@@ -149,7 +151,7 @@ namespace Alepha::inline Cavorite  ::detail::  static_value
 	};
 }
 
-namespace Alepha::Cavorite::inline exports::inline static_value
+namespace Alepha::Hydrogen::inline exports::inline static_value
 {
 	using namespace detail::static_value::exports;
 }
