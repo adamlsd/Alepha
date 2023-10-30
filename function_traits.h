@@ -2,6 +2,8 @@ static_assert( __cplusplus > 2020'00 );
 
 #pragma once
 
+#include <Alepha/Alepha.h>
+
 #include <tuple>
 #include <type_traits>
 #include <functional>
