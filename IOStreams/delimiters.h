@@ -24,146 +24,44 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters_m
 
 	struct Delimiter : boost::noncopyable
 	{
-		std::string current;
-		StreamState state;
+		StreamState< std::string > state;
 
 		explicit
-		Delimiter( const std::string current )
-			: current( current )
-		{
-		}
+		Delimiter( const std::string dflt )
+			: state( [dflt] { return dflt; } ) {}
 	};
-
-	template< ConstexprString s >
-	using CreateDelimiter= void ( const DelimiterParamType< s > & );
-
-	template< typename T >
-	constexpr is_delimiter_v= false;
-
-	template< ConstexprString s >
-	constexpr is_delimiter_v< CreateDelimiter< s > >;
-
-	inline StaticValue< std::map< void (*)( const DelimiterBase & ), StreamState< Delim, std::string, globalDelimiter< 
-	
-
-	template< typename Delimiter >
-	using DelimiterStateByValue= StreamState< Delim, std::string, globalDelimiter< Delim > >;
-
-	inline namespace exports
-	{
-		Delimiter< "\t"_cs > FieldDelimiter;
-		Delimiter< "\t"_cs > FieldDelimiter2;
-
-		static_assert( FieldDelimiter != FieldDelimiter2 );
-
-		Delimiter< "\n"_cs > RecordDelimiter;
-	}
-
-	namespace storage
-	{
-		template< auto Delim >
-		inline StaticValue< std::optional< std::string > > globalDelimiter;
-	}
-
-	template< auto Delim >
-	std::string &
-	globalDelimiter()
-	{
-		if( not storage::globalDelimiter< Delim >().has_value() )
-		{
-		
-			storage::globalDelimiter()= std::string{} + static_cast< char >( Delim );
-		}
-		assert( storage::globalDelimiter< Delim >().has_value() );
-		return storage::globalFieldDelimiter().value();
-	}
 
 	namespace exports
 	{
-		template< auto Delim >
-		void
-		setGlobaDelimiter( const std::string delim )
-		{
-			storage::globalDelimiter< Delim >()= delim;
-		}
-	}
-
-	template< auto Delim >
-	using DelimiterStateByValue= StreamState< Delim, std::string, globalDelimiter< Delim > >;
-
-	
-
-	template< typename DelimType >
-	using DelimiterState= StreamState< Delim, std::string, globalDelimiter >;
-
-
-	struct DelimWrap
-	{	
-		template< typename Delim >
-		Delim val;
-	};
-
-	std::ostream &
-	operator << ( std::ostream &os, auto DelimVal )
-	{
-		return os << DelimiterState< decltype( DelimVal ) >::get( os );
-	}
-
-	namespace exports
-	{
-		auto
-		setFieldDelimiter( const std::string delim )
-		{
-			return FieldDelimiterState::Setter{ delim };
-		}
-
-		const auto &
-		getFieldDelimiter( std::ios_base &ios )
-		{
-			return FieldDelimiterState::get( ios );
-		}
-	}
-
-	inline const int recordIndex= std::ios::xalloc();
-
-	inline void
-	setRecordDelimiterOnIOS( std::ios &ios, const char ch )
-	{
-		ios.iword( recordIndex )= ch;
-	}
-
-	inline char
-	getRecordDelimiter( std::ios &ios )
-	{
-		if( ios.iword( recordIndex ) == 0 ) setRecordDelimiterOnIOS( ios, globalRecordDelimiter() );
-
-		return ios.iword( recordIndex );
+		inline Delimiter fieldDelimiter{ "\t" };
+		inline Delimiter recordDelimiter{ "\n" };
 	}
 
 	inline std::ostream &
-	operator << ( std::ostream &os, decltype( RecordDelimiter ) )
+	operator << ( std::ostream &os, Delimiter &delim )
 	{
-		return os << getRecordDelimiter( os );
+		const auto &s= delim.state.get( os );
+		return os << s;
 	}
-
-	struct RecordDelimiterSetter
-	{
-		const char ch;
-
-		friend std::ostream &
-		operator << ( std::ostream &os, const RecordDelimiterSetter &s )
-		{
-			setRecordDelimiterOnIOS( os, s.ch );
-			return os;
-		}
-	};
 
 	namespace exports
 	{
-		auto
-		setRecordDelimiter( const char ch )
+		inline std::string
+		getDelimiter( Delimiter &delim, std::ios_base &ios )
 		{
-			return RecordDelimiterSetter{ ch };
+			return delim.state.get( ios );
+		}
+
+		inline auto
+		setDelimiter( Delimiter &delim, const std::string s )
+		{
+			return delim.state.makeSetter( s );
+		}
+
+		inline void
+		setGlobalDelimiter( Delimiter &delim, const std::string s )
+		{
+			return delim.state.setDefault( s );
 		}
 	}
 }

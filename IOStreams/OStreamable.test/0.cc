@@ -31,8 +31,9 @@ namespace
 	stringify_specific( const Agg &agg, const std::string delim )
 	{
 		std::ostringstream oss;
-		Alepha::IOStreams::setGlobalFieldDelimiter( "YOU SHOULD NOT SEE THIS" );
-		oss << Alepha::IOStreams::setFieldDelimiter( delim );
+		using Alepha::IOStreams::fieldDelimiter;
+		Alepha::IOStreams::setGlobalDelimiter( fieldDelimiter, "YOU SHOULD NOT SEE THIS" );
+		oss << Alepha::IOStreams::setDelimiter( fieldDelimiter, delim );
 		oss << agg;
 		return std::move( oss ).str();
 	}
@@ -41,7 +42,8 @@ namespace
 	stringify_global( const Agg &agg, const std::string delim )
 	{
 		std::ostringstream oss;
-		Alepha::IOStreams::setGlobalFieldDelimiter( delim );
+		using Alepha::IOStreams::fieldDelimiter;
+		Alepha::IOStreams::setGlobalDelimiter( fieldDelimiter, delim );
 		oss << agg;
 		return std::move( oss ).str();
 	}
@@ -81,8 +83,8 @@ static auto init= Alepha::Utility::enroll <=[]
 		[]( const Agg agg, const std::string delim )
 		{
 			using Alepha::IOStreams::String;
-			using Alepha::IOStreams::setFieldDelimiter;
-			return String{} << setFieldDelimiter( delim ) << agg << FinishString;
+			using Alepha::IOStreams::fieldDelimiter;
+			return String{} << setDelimiter( fieldDelimiter, delim ) << agg << FinishString;
 		}
 	>
 	::Cases

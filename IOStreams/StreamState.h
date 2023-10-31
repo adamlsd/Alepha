@@ -11,7 +11,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 {
 	inline namespace exports
 	{
-		template< typename Tag, typename Type, auto Default= [] { return Type{}; } >
+		template< typename >
 		class StreamState;
 	}
 
@@ -20,7 +20,14 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 	{
 		private:
 			const int index= std::ios::xalloc();
+			std::function< Type () > build;
 
+		public:
+			explicit
+			StreamState( const std::function< Type () > build )
+				: build( build ) {}
+
+		private:
 			static Type *&
 			get_ptr( std::ios_base &ios, const int idx )
 			{
@@ -30,7 +37,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 			Type *&
 			get_ptr( std::ios_base &ios )
 			{
-				get_ptr( ios, index );
+				return get_ptr( ios, index );
 			}
 
 			static void
@@ -50,7 +57,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 				}
 				else if( event == std::ios_base::copyfmt_event )
 				{
-					get_ptr( ios, idx )= new Type{ get( ios, idx ) };
+					get_ptr( ios, idx )= new Type{ *get_ptr( ios, idx ) };
 				}
 			}
 
@@ -63,13 +70,13 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 			void
 			init( std::ios_base &ios )
 			{
-				if( not ios.iword( idx ) )
+				if( not ios.iword( index ) )
 				{
-					ios.iword( index() )= 1;
-					ios.register_callback( callback, idx );
+					ios.iword( index )= 1;
+					ios.register_callback( callback, index );
 				}
-				auto *&ptr= get_ptr( ios, idx );
-				if( not ptr ) ptr= new Type{ Default() };
+				auto *&ptr= get_ptr( ios, index );
+				if( not ptr ) ptr= new Type{ build() };
 			}
 
 		public:
@@ -80,6 +87,12 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 				return *get_ptr( ios );
 			}
 
+			void
+			setDefault( const Type value )
+			{
+				build= [value] { return value; };
+			}
+
 			struct Setter
 			{
 				StreamState *state;
@@ -88,17 +101,23 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 				friend std::ostream &
 				operator << ( std::ostream &os, const Setter &s )
 				{
-					s.get( os )= s.val;
+					s.state->get( os )= s.val;
 					return os;
 				}
 
 				friend std::istream &
 				operator >> ( std::istream &is, const Setter &s )
 				{
-					s.get( is )= s.val;
+					s.state->get( is )= s.val;
 					return is;
 				}
 			};
+
+			auto
+			makeSetter( const Type val )
+			{
+				return Setter{ this, val };
+			}
 	};
 }
 
