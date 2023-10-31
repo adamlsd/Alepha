@@ -12,55 +12,101 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/IOStreams/StreamState.h>
 
-namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
+namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters_m
 {
+	inline namespace exports {}
+
+	// Syntax I want to work:
+	//
+	// std::cout << someDelimiter;
+	// auto value= getDelimiter( someDelimiter, std::cin );
+	// std::cout << setDelimiter( someDelimiter, value );
+
+	struct Delimiter : boost::noncopyable
+	{
+		std::string current;
+		StreamState state;
+
+		explicit
+		Delimiter( const std::string current )
+			: current( current )
+		{
+		}
+	};
+
+	template< ConstexprString s >
+	using CreateDelimiter= void ( const DelimiterParamType< s > & );
+
+	template< typename T >
+	constexpr is_delimiter_v= false;
+
+	template< ConstexprString s >
+	constexpr is_delimiter_v< CreateDelimiter< s > >;
+
+	inline StaticValue< std::map< void (*)( const DelimiterBase & ), StreamState< Delim, std::string, globalDelimiter< 
+	
+
+	template< typename Delimiter >
+	using DelimiterStateByValue= StreamState< Delim, std::string, globalDelimiter< Delim > >;
+
 	inline namespace exports
 	{
-		enum { FieldDelimiter };
-		enum { RecordDelimiter };
-	}
+		Delimiter< "\t"_cs > FieldDelimiter;
+		Delimiter< "\t"_cs > FieldDelimiter2;
 
-	namespace C
-	{
-		const std::string defaultFieldDelimiter= "\t";
-		const char defaultRecordDelimiter= '\n';
+		static_assert( FieldDelimiter != FieldDelimiter2 );
+
+		Delimiter< "\n"_cs > RecordDelimiter;
 	}
 
 	namespace storage
 	{
-		inline StaticValue< std::optional< std::string > > globalFieldDelimiter;
-		inline StaticValue< std::optional< char > > globalRecordDelimiter;
+		template< auto Delim >
+		inline StaticValue< std::optional< std::string > > globalDelimiter;
 	}
 
-	inline std::string
-	globalFieldDelimiter()
+	template< auto Delim >
+	std::string &
+	globalDelimiter()
 	{
-		if( not storage::globalFieldDelimiter().has_value() ) storage::globalFieldDelimiter()= C::defaultFieldDelimiter;
+		if( not storage::globalDelimiter< Delim >().has_value() )
+		{
+		
+			storage::globalDelimiter()= std::string{} + static_cast< char >( Delim );
+		}
+		assert( storage::globalDelimiter< Delim >().has_value() );
 		return storage::globalFieldDelimiter().value();
 	}
 
 	namespace exports
 	{
-		inline void
-		setGlobalFieldDelimiter( const std::string delim )
+		template< auto Delim >
+		void
+		setGlobaDelimiter( const std::string delim )
 		{
-			storage::globalFieldDelimiter()= delim;
+			storage::globalDelimiter< Delim >()= delim;
 		}
 	}
 
-	inline char
-	globalRecordDelimiter()
-	{
-		if( not storage::globalRecordDelimiter().has_value() ) storage::globalRecordDelimiter()= C::defaultRecordDelimiter;
-		return storage::globalRecordDelimiter().value();
-	}
+	template< auto Delim >
+	using DelimiterStateByValue= StreamState< Delim, std::string, globalDelimiter< Delim > >;
 
-	using FieldDelimiterState= StreamState< decltype( FieldDelimiter ), std::string, globalFieldDelimiter >;
+	
 
-	inline std::ostream &
-	operator << ( std::ostream &os, decltype( FieldDelimiter ) )
+	template< typename DelimType >
+	using DelimiterState= StreamState< Delim, std::string, globalDelimiter >;
+
+
+	struct DelimWrap
+	{	
+		template< typename Delim >
+		Delim val;
+	};
+
+	std::ostream &
+	operator << ( std::ostream &os, auto DelimVal )
 	{
-		return os << FieldDelimiterState::get( os );
+		return os << DelimiterState< decltype( DelimVal ) >::get( os );
 	}
 
 	namespace exports
@@ -122,7 +168,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
 	}
 }
 
-namespace Alepha::Hydrogen::IOStreams::inline exports::inline delimiters
+namespace Alepha::Hydrogen::IOStreams::inline exports::inline delimiters_m
 {
-	using namespace detail::delimiters::exports;
+	using namespace detail::delimiters_m::exports;
 }

@@ -15,43 +15,42 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 		class StreamState;
 	}
 
-	template< typename Tag, typename Type, auto Default >
-	class exports::StreamState
+	template< typename Type >
+	class exports::StreamState : boost::noncopyable
 	{
 		private:
-			static auto
-			index()
-			{
-				static const auto rv= std::ios::xalloc();
-				return rv;
-			}
+			const int index= std::ios::xalloc();
 
 			static Type *&
+			get_ptr( std::ios_base &ios, const int idx )
+			{
+				return reinterpret_cast< Type *& >( ios.pword( idx ) );
+			}
+
+			Type *&
 			get_ptr( std::ios_base &ios )
 			{
-				return reinterpret_cast< Type *& >( ios.pword( index() ) );
+				get_ptr( ios, index );
 			}
 
 			static void
-			destroy( std::ios_base &ios )
+			destroy( std::ios_base &ios, const int idx )
 			{
-				delete get_ptr( ios );
-				get_ptr( ios )= nullptr;
+				delete get_ptr( ios, idx );
+				get_ptr( ios, idx )= nullptr;
 			}
 
 			static void
 			callback_impl( const std::ios_base::event event, std::ios_base &ios, const int idx )
 			{
-				if( idx != index() ) throw std::logic_error( "Wrong index." );
-
-				if( event == std::ios_base::erase_event ) destroy( ios );
+				if( event == std::ios_base::erase_event ) destroy( ios, idx );
 				else if( event == std::ios_base::imbue_event )
 				{
 					// Nothing to do... until I develop locale support.
 				}
 				else if( event == std::ios_base::copyfmt_event )
 				{
-					get_ptr( ios )= new Type{ get( ios ) };
+					get_ptr( ios, idx )= new Type{ get( ios, idx ) };
 				}
 			}
 
@@ -61,20 +60,20 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 				return callback_impl( event, ios, idx );
 			}
 
-			static void
+			void
 			init( std::ios_base &ios )
 			{
-				if( not ios.iword( index() ) )
+				if( not ios.iword( idx ) )
 				{
 					ios.iword( index() )= 1;
-					ios.register_callback( callback, index() );
+					ios.register_callback( callback, idx );
 				}
-				auto *&ptr= get_ptr( ios );
+				auto *&ptr= get_ptr( ios, idx );
 				if( not ptr ) ptr= new Type{ Default() };
 			}
 
 		public:
-			static Type &
+			Type &
 			get( std::ios_base &ios )
 			{
 				init( ios );
@@ -83,19 +82,20 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 
 			struct Setter
 			{
+				StreamState *state;
 				const Type val;
 
 				friend std::ostream &
 				operator << ( std::ostream &os, const Setter &s )
 				{
-					StreamState::get( os )= s.val;
+					s.get( os )= s.val;
 					return os;
 				}
 
 				friend std::istream &
 				operator >> ( std::istream &is, const Setter &s )
 				{
-					StreamState::get( is )= s.val;
+					s.get( is )= s.val;
 					return is;
 				}
 			};
