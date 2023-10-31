@@ -45,7 +45,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  ostreamable_module
 		// aggregates, so we'll go with this simple case for now...
 		tuple_for_each( decomposed ) <=[&]( const auto &element )
 		{
-			if( not first ) os << FieldDelimiter;
+			if( not first ) os << fieldDelimiter;
 			first= false;
 			os << element;
 		};

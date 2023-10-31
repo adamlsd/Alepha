@@ -12,117 +12,61 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/IOStreams/StreamState.h>
 
-namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters
+namespace Alepha::Hydrogen::IOStreams  ::detail::  delimiters_m
 {
-	inline namespace exports
+	inline namespace exports {}
+
+	// Syntax I want to work:
+	//
+	// std::cout << someDelimiter;
+	// auto value= getDelimiter( someDelimiter, std::cin );
+	// std::cout << setDelimiter( someDelimiter, value );
+
+	struct Delimiter : boost::noncopyable
 	{
-		enum { FieldDelimiter };
-		enum { RecordDelimiter };
-	}
+		StreamState< std::string > state;
 
-	namespace C
-	{
-		const std::string defaultFieldDelimiter= "\t";
-		const char defaultRecordDelimiter= '\n';
-	}
-
-	namespace storage
-	{
-		inline StaticValue< std::optional< std::string > > globalFieldDelimiter;
-		inline StaticValue< std::optional< char > > globalRecordDelimiter;
-	}
-
-	inline std::string
-	globalFieldDelimiter()
-	{
-		if( not storage::globalFieldDelimiter().has_value() ) storage::globalFieldDelimiter()= C::defaultFieldDelimiter;
-		return storage::globalFieldDelimiter().value();
-	}
-
-	namespace exports
-	{
-		inline void
-		setGlobalFieldDelimiter( const std::string delim )
-		{
-			storage::globalFieldDelimiter()= delim;
-		}
-	}
-
-	inline char
-	globalRecordDelimiter()
-	{
-		if( not storage::globalRecordDelimiter().has_value() ) storage::globalRecordDelimiter()= C::defaultRecordDelimiter;
-		return storage::globalRecordDelimiter().value();
-	}
-
-	using FieldDelimiterState= StreamState< decltype( FieldDelimiter ), std::string, globalFieldDelimiter >;
-
-	inline std::ostream &
-	operator << ( std::ostream &os, decltype( FieldDelimiter ) )
-	{
-		return os << FieldDelimiterState::get( os );
-	}
-
-	namespace exports
-	{
-		auto
-		setFieldDelimiter( const std::string delim )
-		{
-			return FieldDelimiterState::Setter{ delim };
-		}
-
-		const auto &
-		getFieldDelimiter( std::ios_base &ios )
-		{
-			return FieldDelimiterState::get( ios );
-		}
-	}
-
-	inline const int recordIndex= std::ios::xalloc();
-
-	inline void
-	setRecordDelimiterOnIOS( std::ios &ios, const char ch )
-	{
-		ios.iword( recordIndex )= ch;
-	}
-
-	inline char
-	getRecordDelimiter( std::ios &ios )
-	{
-		if( ios.iword( recordIndex ) == 0 ) setRecordDelimiterOnIOS( ios, globalRecordDelimiter() );
-
-		return ios.iword( recordIndex );
-	}
-
-	inline std::ostream &
-	operator << ( std::ostream &os, decltype( RecordDelimiter ) )
-	{
-		return os << getRecordDelimiter( os );
-	}
-
-	struct RecordDelimiterSetter
-	{
-		const char ch;
-
-		friend std::ostream &
-		operator << ( std::ostream &os, const RecordDelimiterSetter &s )
-		{
-			setRecordDelimiterOnIOS( os, s.ch );
-			return os;
-		}
+		explicit
+		Delimiter( const std::string dflt )
+			: state( [dflt] { return dflt; } ) {}
 	};
 
 	namespace exports
 	{
-		auto
-		setRecordDelimiter( const char ch )
+		inline Delimiter fieldDelimiter{ "\t" };
+		inline Delimiter recordDelimiter{ "\n" };
+	}
+
+	inline std::ostream &
+	operator << ( std::ostream &os, Delimiter &delim )
+	{
+		const auto &s= delim.state.get( os );
+		return os << s;
+	}
+
+	namespace exports
+	{
+		inline std::string
+		getDelimiter( Delimiter &delim, std::ios_base &ios )
 		{
-			return RecordDelimiterSetter{ ch };
+			return delim.state.get( ios );
+		}
+
+		inline auto
+		setDelimiter( Delimiter &delim, const std::string s )
+		{
+			return delim.state.makeSetter( s );
+		}
+
+		inline void
+		setGlobalDelimiter( Delimiter &delim, const std::string s )
+		{
+			return delim.state.setDefault( s );
 		}
 	}
 }
 
-namespace Alepha::Hydrogen::IOStreams::inline exports::inline delimiters
+namespace Alepha::Hydrogen::IOStreams::inline exports::inline delimiters_m
 {
-	using namespace detail::delimiters::exports;
+	using namespace detail::delimiters_m::exports;
 }

@@ -11,47 +11,53 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 {
 	inline namespace exports
 	{
-		template< typename Tag, typename Type, auto Default= [] { return Type{}; } >
+		template< typename >
 		class StreamState;
 	}
 
-	template< typename Tag, typename Type, auto Default >
-	class exports::StreamState
+	template< typename Type >
+	class exports::StreamState : boost::noncopyable
 	{
 		private:
-			static auto
-			index()
+			const int index= std::ios::xalloc();
+			std::function< Type () > build;
+
+		public:
+			explicit
+			StreamState( const std::function< Type () > build )
+				: build( build ) {}
+
+		private:
+			static Type *&
+			get_ptr( std::ios_base &ios, const int idx )
 			{
-				static const auto rv= std::ios::xalloc();
-				return rv;
+				return reinterpret_cast< Type *& >( ios.pword( idx ) );
 			}
 
-			static Type *&
+			Type *&
 			get_ptr( std::ios_base &ios )
 			{
-				return reinterpret_cast< Type *& >( ios.pword( index() ) );
+				return get_ptr( ios, index );
 			}
 
 			static void
-			destroy( std::ios_base &ios )
+			destroy( std::ios_base &ios, const int idx )
 			{
-				delete get_ptr( ios );
-				get_ptr( ios )= nullptr;
+				delete get_ptr( ios, idx );
+				get_ptr( ios, idx )= nullptr;
 			}
 
 			static void
 			callback_impl( const std::ios_base::event event, std::ios_base &ios, const int idx )
 			{
-				if( idx != index() ) throw std::logic_error( "Wrong index." );
-
-				if( event == std::ios_base::erase_event ) destroy( ios );
+				if( event == std::ios_base::erase_event ) destroy( ios, idx );
 				else if( event == std::ios_base::imbue_event )
 				{
 					// Nothing to do... until I develop locale support.
 				}
 				else if( event == std::ios_base::copyfmt_event )
 				{
-					get_ptr( ios )= new Type{ get( ios ) };
+					get_ptr( ios, idx )= new Type{ *get_ptr( ios, idx ) };
 				}
 			}
 
@@ -61,44 +67,57 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  stream_state
 				return callback_impl( event, ios, idx );
 			}
 
-			static void
+			void
 			init( std::ios_base &ios )
 			{
-				if( not ios.iword( index() ) )
+				if( not ios.iword( index ) )
 				{
-					ios.iword( index() )= 1;
-					ios.register_callback( callback, index() );
+					ios.iword( index )= 1;
+					ios.register_callback( callback, index );
 				}
-				auto *&ptr= get_ptr( ios );
-				if( not ptr ) ptr= new Type{ Default() };
+				auto *&ptr= get_ptr( ios, index );
+				if( not ptr ) ptr= new Type{ build() };
 			}
 
 		public:
-			static Type &
+			Type &
 			get( std::ios_base &ios )
 			{
 				init( ios );
 				return *get_ptr( ios );
 			}
 
+			void
+			setDefault( const Type value )
+			{
+				build= [value] { return value; };
+			}
+
 			struct Setter
 			{
+				StreamState *state;
 				const Type val;
 
 				friend std::ostream &
 				operator << ( std::ostream &os, const Setter &s )
 				{
-					StreamState::get( os )= s.val;
+					s.state->get( os )= s.val;
 					return os;
 				}
 
 				friend std::istream &
 				operator >> ( std::istream &is, const Setter &s )
 				{
-					StreamState::get( is )= s.val;
+					s.state->get( is )= s.val;
 					return is;
 				}
 			};
+
+			auto
+			makeSetter( const Type val )
+			{
+				return Setter{ this, val };
+			}
 	};
 }
 

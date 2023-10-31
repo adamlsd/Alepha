@@ -34,7 +34,7 @@ namespace Alepha::Hydrogen::IOStreams  ::detail::  istreamable_module
 		const auto commentChar= line.find( "#" );
 		if( commentChar != std::string::npos ) line= line.substr( line.find( "#" ) );
 
-		const auto delim= getFieldDelimiter( is );
+		const auto delim= getDelimiter( fieldDelimiter, is );
 		const auto tokens= split( line, delim );
 
 		auto decomposed= Alepha::Reflection::tuplizeAggregate( istreamable );

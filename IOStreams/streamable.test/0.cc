@@ -31,14 +31,14 @@ namespace
 std::string
 roundTripString( const std::string text, const std::string delim )
 {
-	using namespace Alepha::IOStreams::exports::delimiters;
+	using namespace Alepha::IOStreams::exports::delimiters_m;
 	std::istringstream iss{ text };
 	
 	Agg agg;
-	iss >> setFieldDelimiter( delim ) >> agg;
+	iss >> setDelimiter( fieldDelimiter, delim ) >> agg;
 
 	std::ostringstream oss;
-	oss << setFieldDelimiter( delim ) << agg;
+	oss << setDelimiter( fieldDelimiter, delim ) << agg;
 
 	return oss.str();
 }
