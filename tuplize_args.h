@@ -23,7 +23,7 @@ static_assert( __cplusplus > 2020'00 );
 #include "Concepts.h"
 #include "type_lisp.h"
 
-namespace Alepha::Hydrogen  ::detail::  tuplize_args
+namespace Alepha::Hydrogen  ::detail::  tuplize_args_m
 {
 
 	inline namespace exports
@@ -136,7 +136,7 @@ namespace Alepha::Hydrogen  ::detail::  tuplize_args
 	}
 }
 
-namespace Alepha::Hydrogen::inline exports::inline tuplize_args
+namespace Alepha::Hydrogen::inline exports::inline tuplize_args_m
 {
-	using namespace detail::tuplize_args::exports;
+	using namespace detail::tuplize_args_m::exports;
 }

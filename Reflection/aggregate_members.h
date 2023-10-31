@@ -11,7 +11,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/Concepts.h>
 
 #include <Alepha/Reflection/detail/config.h>
-#include <Alepha/Reflection/aggregate_initialization.h>
+#include <Alepha/Reflection/aggregate_initializer_size.h>
 
 #include <Alepha/Meta/overload.h>
 #include <Alepha/Meta/type_value.h>
