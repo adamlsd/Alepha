@@ -128,14 +128,6 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		{}
 #endif
 
-#if 0
-		template< typename ... Args >
-		requires ConstructibleFrom< return_type, std::decay_t< Args >... >
-		BasicUniversalHandler( Args &&... expected_init )
-			: BasicUniversalHandler( return_type{ std::forward< Args >( expected_init )... } )
-		{}
-#endif
-
 #if 1
 		template< typename T >
 		requires( not SameAs< T, void > )
@@ -259,38 +251,6 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			}
 			else throw std::logic_error( "Somehow we didn't setup impl, and it's not an adapted case!" );
 		}
-
-#if 0
-		template< typename T_= return_type, typename= std::enable_if_t< not std::is_class_v< std::decay_t< T_ > > > >
-		BasicUniversalHandler( const T_ expected )
-		: impl
-		{
-			[expected]( Invoker invoker, const std::string &comment )
-			{
-				static_assert( not Aggregate< T_ > );
-				static_assert( not std::is_class_v< T_ > );
-				const return_type witness= invoker();
-				const auto result= witness == expected ? TestResult::Passed : TestResult::Failed;
-				
-				if( result == TestResult::Failed )
-				{
-					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
-					printDebugging< outputMode >( witness, expected );
-				}
-				else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
-				return result;
-			}
-		}
-		{}
-#endif
-
-#if 0
-		template< typename ... Args >
-		requires ConstructibleFrom< return_type, std::decay_t< Args >... >
-		BasicUniversalHandler( Args &&... expected_init )
-			: BasicUniversalHandler( return_type{ std::forward< Args >( expected_init )... } )
-		{}
-#endif
 
 #if 1
 		template< typename T >
@@ -416,38 +376,6 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			}
 			else throw std::logic_error( "Somehow we didn't setup impl, and it's not an adapted case!" );
 		}
-
-#if 0
-		template< typename T_= return_type, typename= std::enable_if_t< not std::is_class_v< std::decay_t< T_ > > > >
-		BasicUniversalHandler( const T_ expected )
-		: impl
-		{
-			[expected]( Invoker invoker, const std::string &comment )
-			{
-				static_assert( not Aggregate< T_ > );
-				static_assert( not std::is_class_v< T_ > );
-				const return_type witness= invoker();
-				const auto result= witness == expected ? TestResult::Passed : TestResult::Failed;
-				
-				if( result == TestResult::Failed )
-				{
-					std::cout << "    " << C::testFail << "FAILED CASE" << resetStyle << ": " << comment << std::endl;
-					printDebugging< outputMode >( witness, expected );
-				}
-				else std::cout << "    " << C::testPass << "PASSED CASE" << resetStyle << ": " << comment << std::endl;
-				return result;
-			}
-		}
-		{}
-#endif
-
-#if 0
-		template< typename ... Args >
-		requires ConstructibleFrom< return_type, std::decay_t< Args >... >
-		BasicUniversalHandler( Args &&... expected_init )
-			: BasicUniversalHandler( return_type{ std::forward< Args >( expected_init )... } )
-		{}
-#endif
 
 #if 1
 		template< typename T >
@@ -950,58 +878,6 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 		//using ExceptionCases= ExceptionCases_real;
 		using ExceptionCases= UniversalCases;
 	};
-
-#ifdef DISABLED
-	template< typename RetVal, typename ... Args, RetVal (*function)( Args... ) >
-	struct TableTest< function >::VectorCases
-	{
-		static_assert( sizeof...( Args ) == 1 );
-		static_assert( Meta::is_vector_v< RetVal > );
-		static_assert( Meta::is_vector_v< std::tuple_element_t< 0, std::tuple< Args... > > > );
-
-		using TestDescription= std::tuple< std::string,
-				std::vector< std::pair< typename std::tuple_element_t< 0, std::tuple< Args... > >::value_type, typename RetVal::value_type > > >;
-
-		std::vector< TestDescription > tests;
-
-		explicit
-		VectorCases( std::initializer_list< TestDescription > initList )
-			: tests( initList ) {}
-
-		int
-		operator() () const
-		{
-			int failureCount= 0;
-			for( const auto &[ comment, productions ]: tests )
-			{
-				const auto expected= evaluate <=[&]
-				{
-					std::vector< RetVal > rv;
-					std::transform( begin( productions ), end( productions ), back_inserter( rv ),
-						[]( const auto &prod ) { return prod.second; } );
-					return rv;
-				};
-
-				const auto params= evaluate <=[&]
-				{
-					std::vector< RetVal > rv;
-					std::transform( begin( productions ), end( productions ), back_inserter( rv ),
-						[]( const auto &prod ) { return prod.first; } );
-					return rv;
-				};
-
-				if( std::apply( function, std::tuple{ params } ) != expected )
-				{
-					std::cout << "  FAILURE: " << comment << std::endl;
-					++failureCount;
-				}
-				else std::cout << "  SUCCESS: " << comment << std::endl;
-			}
-
-			return failureCount;
-		}
-	};
-#endif
 }
 
 namespace Alepha::Hydrogen::Testing::inline exports::inline table_test
