@@ -933,6 +933,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 			std::vector< TestDescription > tests;
 
 			UniversalCases( std::initializer_list< TestDescription > initList )
+				: tests( initList )
 			{
 				for( const auto &desc: initList )
 				{
