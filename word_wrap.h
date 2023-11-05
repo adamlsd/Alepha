@@ -11,7 +11,7 @@ static_assert( __cplusplus > 2020'00 );
 
 #include <Alepha/Utility/StackableStreambuf.h>
 
-namespace Alepha::Hydrogen  ::detail::  word_wrap
+namespace Alepha::Hydrogen  ::detail::  word_wrap_m
 {
 	inline namespace exports
 	{
@@ -36,7 +36,7 @@ namespace Alepha::Hydrogen  ::detail::  word_wrap
 	}
 }
 
-namespace Alepha::Hydrogen::inline exports::inline word_wrap
+namespace Alepha::Hydrogen::inline exports::inline word_wrap_m
 {
-	using namespace detail::word_wrap::exports;
+	using namespace detail::word_wrap_m::exports;
 }

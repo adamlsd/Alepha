@@ -12,7 +12,7 @@ static_assert( __cplusplus > 2020 );
 
 #include <Alepha/Utility/evaluation_helpers.h>
 
-namespace Alepha::Hydrogen  ::detail::  word_wrap
+namespace Alepha::Hydrogen  ::detail::  word_wrap_m
 {
 	namespace
 	{
