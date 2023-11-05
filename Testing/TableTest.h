@@ -32,6 +32,7 @@ static_assert( __cplusplus > 2020'00 );
 #include <Alepha/IOStreams/String.h>
 
 #include <Alepha/Utility/evaluation_helpers.h>
+#include <Alepha/Utility/TupleAdapter.h>
 
 #include <Alepha/Reflection/tuplizeAggregate.h>
 
@@ -60,38 +61,6 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	template< OutputMode outputMode, typename T >
 	void printDebugging( const T &witness, const T &expected );
 
-	template< Aggregate Agg, TypeListType >
-	struct TupleSneak;
-
-	template< Aggregate Agg >
-	struct TupleSneak< Agg, Nil >
-		: Agg
-	{
-		TupleSneak() { std::cerr << "The inherited default ctor was called." << std::endl; }
-
-		protected:
-			void set( Agg agg ) { static_cast< Agg & >( *this )= agg; }
-	};
-
-	template< Aggregate Agg, typename ... Args >
-	struct TupleSneak< Agg, TypeList< Args... > >
-		: TupleSneak< Agg, cdr_t< TypeList< Args... > > >
-	{
-		using Parent= TupleSneak< Agg, cdr_t< TypeList< Args... > > >;
-		using Parent::Parent;
-
-		TupleSneak( Args ... args )
-		{
-			std::cerr << "I was the ctor called, with " << sizeof...( Args ) << " arguments." << std::endl;
-			tuple_for_each( std::tuple{ args... } ) <=
-			[]( const auto element )
-			{
-				std::cerr << "Element: " << element << std::endl;
-			};
-			this->set( { args... } );
-		}
-	};
-
 	enum class TestResult { Passed, Failed };
 
 	struct BlankBase {};
@@ -100,7 +69,7 @@ namespace Alepha::Hydrogen::Testing  ::detail::  table_test
 	static consteval auto
 	compute_base_f() noexcept
 	{
-		if constexpr ( Aggregate< T > ) return std::type_identity< TupleSneak< T, list_from_tuple_t< Reflection::aggregate_tuple_t< T > > > >{};
+		if constexpr ( Aggregate< T > ) return std::type_identity< Utility::TupleAdapter< T > >{};
 		else if constexpr( std::is_class_v< T > ) return std::type_identity< T >{};
 		else return std::type_identity< BlankBase >{};
 	}
